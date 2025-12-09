@@ -6,16 +6,16 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge"; // Eğer yüklü değilse: npx shadcn@latest add badge
+import { Badge } from "@/components/ui/badge";
 import { Users, Wifi, Maximize, ArrowRight, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 const Rooms = () => {
-  // 1. STATE: Hangi filtrenin seçili olduğunu tutar (Varsayılan: 'hepsi')
   const [activeCategory, setActiveCategory] = useState("hepsi");
 
   const navigate = useNavigate();
-  // 2. KATEGORİ LİSTESİ (Butonlar için)
+  const { user } = useAuth();
   const categories = [
     { id: "hepsi", label: "Tüm Odalar" },
     { id: "standart", label: "Standart Odalar" },
@@ -24,7 +24,19 @@ const Rooms = () => {
     { id: "aile", label: "Aile Odaları" },
   ];
 
-  // 3. ODA VERİLERİ (Database simülasyonu)
+  const handleBookingClick = (roomId: number) => {
+    if (user) {
+      // A) Kullanıcı zaten giriş yapmışsa direkt rezervasyona git
+      navigate(`/reservation/${roomId}`);
+    } else {
+      // B) Giriş yapmamışsa Login sayfasına at AMA...
+      // 'state' parametresiyle nereye gitmek istediğini de gönderiyoruz (returnUrl)
+      navigate("/auth/login", {
+        state: { returnUrl: `/reservation/${roomId}` },
+      });
+    }
+  };
+
   const roomsData = [
     {
       id: 1,
@@ -94,7 +106,6 @@ const Rooms = () => {
     },
   ];
 
-  // 4. FİLTRELEME MANTIĞI
   const filteredRooms =
     activeCategory === "hepsi"
       ? roomsData
@@ -103,7 +114,6 @@ const Rooms = () => {
   return (
     <div className="w-full bg-slate-50 min-h-screen py-12">
       <div className="container mx-auto px-4">
-        {/* Başlık kısmı */}
         <div className="text-center mb-12">
           <h1 className="text-2xl font-bold text-slate-900 mb-4">
             Konaklama Seçenekleri
@@ -114,7 +124,6 @@ const Rooms = () => {
           </p>
         </div>
 
-        {/* Filtreme Butonları */}
         <div className="flex flex-wrap justify-center gap-4 mb-16">
           {categories.map((cat) => (
             <Button
@@ -128,7 +137,6 @@ const Rooms = () => {
           ))}
         </div>
 
-        {/* Oda kartları */}
         <div className="grid grild-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredRooms.map((room) => (
             <Card
@@ -159,7 +167,6 @@ const Rooms = () => {
                   {room.description}
                 </p>
 
-                {/* Özellik İkonları */}
                 <div className="flex items-center justify-between text-sm text-slate-600 border-t border-slate-100 pt-4">
                   <div
                     className="flex items-center gap-2"
@@ -183,10 +190,15 @@ const Rooms = () => {
               </CardContent>
 
               <CardFooter className="p-6 pt-0">
-                <Button className="w-full bg-slate-900 text-white transition-colors group-hover:shadow-lg"
-                onClick={()=> {navigate(`/reservation/${room.id}`)}}>
+                <Button
+                  className="w-full bg-slate-900 hover:bg-blue-600 ..."
+                  onClick={() => handleBookingClick(room.id)} // Yeni fonksiyonu kullan
+                >
                   Detayları İncele
-                  <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight
+                    size={16}
+                    className="ml-2 group-hover:translate-x-1 transition-transform"
+                  />
                 </Button>
               </CardFooter>
             </Card>
