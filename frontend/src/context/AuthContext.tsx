@@ -1,48 +1,99 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { set } from "date-fns";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  type ReactNode,
+} from "react";
+import api from "@/services/api";
 
-interface User {
+type User = {
+  _id: string;
   name: string;
+  surname: string;
   email: string;
   role: "admin" | "user";
-}
+};
 
-interface AuthContextType {
+type AuthContextType = {
   user: User | null;
-  login: (userData: User) => void;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (credentials: any) => Promise<boolean>;
+  register: (data: any) => Promise<boolean>;
   logout: () => void;
-}
+};
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Sayfa yenilendiğinde LocalStorage'dan kullanıcıyı geri getir
   useEffect(() => {
-    const storedUser = localStorage.getItem("hotel_user");
-    if (storedUser) {
+    const storedUser = localStorage.getItem("user");
+    const token = localStorage.getItem("token");
+
+    if (storedUser && token) {
       setUser(JSON.parse(storedUser));
     }
+    setIsLoading(false);
   }, []);
 
-  const login = (userData: User) => {
-    setUser(userData);
-    localStorage.setItem("hotel_user", JSON.stringify(userData)); // Kalıcı olsun diye
+  const login = async (credentials: any) => {
+    try {
+      const response = await api.post("/auth/login", credentials);
+      const { token, ...userData } = response.data;
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(userData));
+      setUser(userData);
+      return true;
+    } catch (error: any) {
+      throw error.response?.data?.message || "Giriş Başarısız.";
+    }
+  };
+
+  const register = async (data: any) => {
+    try {
+      const response = await api.post("/auth/register", data);
+
+      const { token, ...userData } = response.data;
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(userData));
+
+      setUser(userData);
+      return true;
+    } catch (error: any) {
+      throw error.response?.data?.message || "Kayıt başarısız.";
+    }
   };
 
   const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setUser(null);
-    localStorage.removeItem("hotel_user");
+    window.location.href = "/auth/login";
+    // çıkış yapınca logine atıyor ancak anasayfa olarak değiştirebilir.
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated: !!user,
+        isLoading,
+        login,
+        register,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Hook olarak dışa aktar (Kullanımı kolaylaştırmak için)
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) throw new Error("useAuth must be used within an AuthProvider");

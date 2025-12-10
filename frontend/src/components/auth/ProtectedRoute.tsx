@@ -1,5 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { is } from "date-fns/locale";
 
 type ProtectedRouteProps = {
   children: React.ReactNode;
@@ -7,19 +8,23 @@ type ProtectedRouteProps = {
 };
 
 const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
-  const { user } = useAuth();
+  const { user , isLoading} = useAuth();
+  if(isLoading){
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-lg font-medium text-slate-600">Yükleniyor...</div>
+      </div>
+    )
+  }
 
-  // 1. Kullanıcı hiç giriş yapmamışsa Login'e at
   if (!user) {
     return <Navigate to="/auth/login" replace />;
   }
 
-  // 2. Admin sayfasına girmeye çalışıyor ama rolü 'user' ise Anasayfaya at
   if (requiredRole === "admin" && user.role !== "admin") {
     return <Navigate to="/" replace />;
   }
 
-  // Sorun yoksa sayfayı göster
   return <>{children}</>;
 };
 
