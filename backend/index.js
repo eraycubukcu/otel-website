@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
+import roomRoutes from "./routes/roomRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -14,6 +15,7 @@ app.use(cors()); // frontend bağlantı
 app.use(express.json()); // json verilerini okumak için
 
 app.use("/api/auth", authRoutes);
+app.use("/api/rooms",roomRoutes );
 
 app.get("/", (req, res) => {
   res.send("Api çalışıyor.");

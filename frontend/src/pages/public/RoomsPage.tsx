@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -7,15 +7,20 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Wifi, Maximize, ArrowRight, Star } from "lucide-react";
+import { Users, Wifi, Maximize, ArrowRight, Star, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { roomService, type Room } from "@/services/roomService";
 
 const Rooms = () => {
   const [activeCategory, setActiveCategory] = useState("hepsi");
 
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   const navigate = useNavigate();
   const { user } = useAuth();
+
   const categories = [
     { id: "hepsi", label: "Tüm Odalar" },
     { id: "standart", label: "Standart Odalar" },
@@ -24,92 +29,46 @@ const Rooms = () => {
     { id: "aile", label: "Aile Odaları" },
   ];
 
-  const handleBookingClick = (roomId: number) => {
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        const rooms = await roomService.getAllRooms();
+        setRooms(rooms);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchRooms();
+  }, []);
+
+  const handleBookingClick = (roomId: string) => {
+    // mongoDb id string old. icin
     if (user) {
-      // A) Kullanıcı zaten giriş yapmışsa direkt rezervasyona git
       navigate(`/reservation/${roomId}`);
     } else {
-      // B) Giriş yapmamışsa Login sayfasına at AMA...
-      // 'state' parametresiyle nereye gitmek istediğini de gönderiyoruz (returnUrl)
       navigate("/auth/login", {
         state: { returnUrl: `/reservation/${roomId}` },
       });
     }
   };
 
-  const roomsData = [
-    {
-      id: 1,
-      category: "standart",
-      title: "Standart Çift Kişilik Oda",
-      image:
-        "https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&w=800&q=80",
-      price: "2.500 ₺",
-      size: "25 m²",
-      guests: "2 Yetişkin",
-      description: "Ekonomik ve konforlu bir konaklama için ideal seçim.",
-    },
-    {
-      id: 2,
-      category: "deluxe",
-      title: "Deluxe Deniz Manzaralı",
-      image:
-        "https://images.unsplash.com/photo-1590490360182-c33d57733427?ixlib=rb-4.0.3&w=800&q=80",
-      price: "4.000 ₺",
-      size: "35 m²",
-      guests: "2 Yetişkin, 1 Çocuk",
-      description: "Muhteşem deniz manzarası ve geniş balkon keyfi.",
-    },
-    {
-      id: 3,
-      category: "suite",
-      title: "King Suite",
-      image:
-        "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-4.0.3&w=800&q=80",
-      price: "7.500 ₺",
-      size: "60 m²",
-      guests: "4 Yetişkin",
-      description: "Lüksün sınırlarını zorlayan, jakuzili özel suit.",
-    },
-    {
-      id: 4,
-      category: "aile",
-      title: "Geniş Aile Odası",
-      image:
-        "https://images.unsplash.com/photo-1566665797739-1674de7a421a?ixlib=rb-4.0.3&w=800&q=80",
-      price: "5.000 ₺",
-      size: "45 m²",
-      guests: "2 Yetişkin, 2 Çocuk",
-      description: "Ailenizle rahatça konaklayabileceğiniz ferah alanlar.",
-    },
-    {
-      id: 5,
-      category: "standart",
-      title: "Standart Tek Kişilik",
-      image:
-        "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?ixlib=rb-4.0.3&w=800&q=80",
-      price: "1.800 ₺",
-      size: "20 m²",
-      guests: "1 Yetişkin",
-      description: "İş seyahatleri için kompakt ve modern tasarım.",
-    },
-    {
-      id: 6,
-      category: "suite",
-      title: "Honeymoon Suite",
-      image:
-        "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?ixlib=rb-4.0.3&w=800&q=80",
-      price: "6.000 ₺",
-      size: "50 m²",
-      guests: "2 Yetişkin",
-      description: "Balayı çiftlerine özel romantik detaylar ve ikramlar.",
-    },
-  ];
-
   const filteredRooms =
     activeCategory === "hepsi"
-      ? roomsData
-      : roomsData.filter((room) => room.category === activeCategory);
+      ? rooms
+      : rooms.filter((room) => room.category === activeCategory);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-slate-50">
+        <div className="text-center">
+          <Loader2 className="h-10 w-10 animate-spin text-slate-900 mx-auto mb-4" />
+          <p className="text-slate-500">Odalar yükleniyor...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full bg-slate-50 min-h-screen py-12">
@@ -140,7 +99,7 @@ const Rooms = () => {
         <div className="grid grild-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredRooms.map((room) => (
             <Card
-              key={room.id}
+              key={room._id}
               className="group overflow-hidden border-none shadow-md hover:shadow-2xl transition-all duration-300 flex flex-col py-0"
             >
               <CardHeader className="p-0 relative h-64 overflow-hidden">
@@ -173,7 +132,7 @@ const Rooms = () => {
                     title="Kişi Kapasitesi"
                   >
                     <Users size={18} className="text-blue-600" />
-                    <span>{room.guests}</span>
+                    <span>{room.capacity}</span>
                   </div>
                   <div
                     className="flex items-center gap-2"
@@ -192,7 +151,7 @@ const Rooms = () => {
               <CardFooter className="p-6 pt-0">
                 <Button
                   className="w-full bg-slate-900 hover:bg-blue-600 ..."
-                  onClick={() => handleBookingClick(room.id)} // Yeni fonksiyonu kullan
+                  onClick={() => handleBookingClick(room._id)}
                 >
                   Detayları İncele
                   <ArrowRight
