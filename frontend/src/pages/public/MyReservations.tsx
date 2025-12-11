@@ -1,142 +1,219 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect, useState } from "react";
+import { reservationService, type Reservation } from "@/services/reservationService";
+import { format } from "date-fns";
+import { tr } from "date-fns/locale";
+import { 
+  CalendarDays, 
+  MapPin, 
+  Clock, 
+  Loader2, 
+  CreditCard, 
+  BedDouble, 
+  CalendarArrowDown, 
+  CalendarArrowUp,
+  XCircle
+} from "lucide-react";
+import { Link } from "react-router-dom"; // React Router kullanıyorsun
+
+// Shadcn UI Bileşenleri
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, MapPin, CreditCard, Clock } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner"; // veya 'react-hot-toast'
 
 const MyReservations = () => {
-  // Mock Veriler
-  const reservations = [
-    {
-      id: 1,
-      hotelName: "Otel Adı",
-      room: "Deluxe Deniz Manzaralı",
-      checkIn: "12 Ekim 2025",
-      checkOut: "15 Ekim 2025",
-      price: "12.000 ₺",
-      status: "active", // active, completed, cancelled
-      image: "https://images.unsplash.com/photo-1590490360182-c33d57733427?ixlib=rb-4.0.3&w=800&q=80"
-    },
-    {
-      id: 2,
-      hotelName: "Otel Adı",
-      room: "Standart Oda",
-      checkIn: "01 Eylül 2024",
-      checkOut: "05 Eylül 2024",
-      price: "8.500 ₺",
-      status: "completed",
-      image: "https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&w=800&q=80"
-    },
-    {
-      id: 3,
-      hotelName: "Otel Adı",
-      room: "King Suite",
-      checkIn: "20 Temmuz 2024",
-      checkOut: "22 Temmuz 2024",
-      price: "15.000 ₺",
-      status: "cancelled",
-      image: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-4.0.3&w=800&q=80"
-    },
-  ];
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Rezervasyon Kartı Bileşeni (Tekrar kullanmak için)
-  const ReservationCard = ({ data }: { data: any }) => (
-    <Card className="overflow-hidden border-none shadow-md hover:shadow-lg transition-shadow mb-6 flex flex-col md:flex-row">
-      {/* Resim Alanı */}
-      <div className="w-full md:w-1/3 h-48 md:h-auto relative">
-        <img src={data.image} alt={data.room} className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute top-4 left-4">
-           <Badge className={`
-             ${data.status === 'active' ? 'bg-green-600' : 
-               data.status === 'completed' ? 'bg-slate-500' : 'bg-red-600'}
-           `}>
-             {data.status === 'active' ? 'Onaylandı' : 
-              data.status === 'completed' ? 'Tamamlandı' : 'İptal Edildi'}
-           </Badge>
-        </div>
+  // 1. Verileri Çekme
+  const fetchReservations = async () => {
+    try {
+      const data = await reservationService.getUserReservation();
+      // Tarihe göre sırala (En yeni en üstte)
+      const sortedData = data.sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      setReservations(sortedData);
+    } catch (error) {
+      console.error("Veri çekme hatası:", error);
+      toast.error("Rezervasyonlar yüklenemedi.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReservations();
+  }, []);
+
+  // 2. İptal Fonksiyonu
+  const handleCancel = async (id: string) => {
+    if (!window.confirm("Bu rezervasyonu iptal etmek istediğinize emin misiniz?")) return;
+
+    try {
+      await reservationService.deleteReservation(id); 
+      toast.success("Rezervasyon iptal edildi.");
+      setReservations((prev) => prev.filter((res) => res._id !== id));
+    } catch (error) {
+      toast.error("İptal işlemi başarısız.");
+    }
+  };
+
+  // Helper: Durum Stilleri
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "confirmed": 
+        return <Badge className="bg-green-100 text-green-700 hover:bg-green-200 px-3 py-1 text-sm border-none shadow-none">Onaylandı</Badge>;
+      case "pending": 
+        return <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-200 px-3 py-1 text-sm border-none shadow-none">Onay Bekliyor</Badge>;
+      case "cancelled": 
+        return <Badge className="bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1 text-sm border-none shadow-none">İptal Edildi</Badge>;
+      default: 
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return format(new Date(dateString), "d MMMM yyyy", { locale: tr });
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col h-64 items-center justify-center space-y-4">
+        <Loader2 className="h-10 w-10 animate-spin text-slate-900" />
+        <p className="text-slate-500 text-sm">Rezervasyonlarınız yükleniyor...</p>
       </div>
-
-      {/* Bilgi Alanı */}
-      <div className="w-full md:w-2/3 p-6 flex flex-col justify-between">
-        <div>
-           <div className="flex justify-between items-start mb-2">
-              <div>
-                <h3 className="text-xl font-bold text-slate-900">{data.room}</h3>
-                <p className="text-slate-500 text-sm flex items-center gap-1 mt-1">
-                   <MapPin size={14} /> Çanakkale, Türkiye
-                </p>
-              </div>
-              <div className="text-right">
-                 <p className="text-lg font-bold text-slate-900">{data.price}</p>
-                 <p className="text-xs text-slate-400">Toplam Tutar</p>
-              </div>
-           </div>
-           
-           <div className="grid grid-cols-2 gap-4 mt-6">
-              <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
-                 <p className="text-xs text-slate-400 mb-1">Giriş Tarihi</p>
-                 <p className="text-sm font-medium text-slate-800 flex items-center gap-2">
-                    <CalendarDays size={16} className="text-blue-600" /> {data.checkIn}
-                 </p>
-              </div>
-              <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
-                 <p className="text-xs text-slate-400 mb-1">Çıkış Tarihi</p>
-                 <p className="text-sm font-medium text-slate-800 flex items-center gap-2">
-                    <Clock size={16} className="text-orange-600" /> {data.checkOut}
-                 </p>
-              </div>
-           </div>
-        </div>
-
-        <div className="flex justify-end gap-3 mt-6">
-           {data.status === 'active' && (
-             <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700">
-                Rezervasyonu İptal Et
-             </Button>
-           )}
-           <Button variant="ghost" className="text-blue-600 hover:text-blue-700">
-              Detayları Gör
-           </Button>
-        </div>
-      </div>
-    </Card>
-  );
+    );
+  }
 
   return (
-    <div className="container max-w-5xl mx-auto py-12 px-4 min-h-screen">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-800">Rezervasyonlarım</h1>
-        <p className="text-slate-500 mt-2">Geçmiş ve gelecek konaklama detaylarınız.</p>
+    <div className="space-y-8 max-w-5xl mx-auto py-6 px-4">
+      {/* Başlık Alanı */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-6">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight text-slate-900">Rezervasyonlarım</h2>
+          <p className="text-slate-500 mt-1">Geçmiş ve yaklaşan tüm konaklama detaylarınız.</p>
+        </div>
+        <div className="text-right hidden md:block">
+           <p className="text-sm text-slate-400">Toplam Kayıt</p>
+           <p className="text-2xl font-bold text-slate-900">{reservations.length}</p>
+        </div>
       </div>
 
-      <Tabs defaultValue="active" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-8 bg-slate-100 p-1 rounded-xl">
-          <TabsTrigger value="active" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">Aktif</TabsTrigger>
-          <TabsTrigger value="completed" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">Geçmiş</TabsTrigger>
-          <TabsTrigger value="cancelled" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">İptal Edilen</TabsTrigger>
-        </TabsList>
+      {reservations.length === 0 ? (
+        // BOŞ DURUM (Empty State)
+        <div className="flex flex-col items-center justify-center py-16 bg-slate-50 rounded-2xl border border-slate-100 text-center">
+          <div className="bg-white p-4 rounded-full shadow-sm mb-4">
+             <CalendarDays className="h-12 w-12 text-slate-300" />
+          </div>
+          <h3 className="text-xl font-semibold text-slate-900">Henüz bir rezervasyonunuz yok</h3>
+          <p className="text-slate-500 mt-2 max-w-md mx-auto">
+            Hayalinizdeki tatil sadece bir tık uzakta. Odalarımızı inceleyip hemen yerinizi ayırtın.
+          </p>
+          <Button asChild className="mt-6 bg-slate-900 hover:bg-slate-800" size="lg">
+            <Link to="/rooms">Odaları İncele</Link>
+          </Button>
+        </div>
+      ) : (
+        // DOLU LİSTE
+        <div className="grid gap-6">
+          {reservations.map((res) => (
+            <Card key={res._id} className="overflow-hidden border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 group">
+              <div className="flex flex-col md:flex-row">
+                
+                {/* SOL: Oda Görseli */}
+                <div className="w-full md:w-64 h-56 md:h-auto relative">
+                   <img 
+                    src={res.room?.image || "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80"} 
+                    alt={res.room?.title || "Oda"} 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                   />
+                   {/* Mobil için Durum Rozeti (Resim üstünde) */}
+                   <div className="absolute top-3 right-3 md:hidden">
+                      {getStatusBadge(res.status)}
+                   </div>
+                </div>
 
-        <TabsContent value="active">
-          {reservations.filter(r => r.status === 'active').map(res => (
-            <ReservationCard key={res.id} data={res} />
-          ))}
-          {reservations.filter(r => r.status === 'active').length === 0 && (
-            <div className="text-center py-12 text-slate-400">Aktif rezervasyonunuz bulunmamaktadır.</div>
-          )}
-        </TabsContent>
+                {/* SAĞ: İçerik */}
+                <div className="flex-1 p-6 flex flex-col">
+                  
+                  {/* Üst Kısım: Başlık ve Durum */}
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                         <h3 className="text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                            {res.room ? res.room.title : <span className="text-red-400">Silinmiş Oda Bilgisi</span>}
+                         </h3>
+                         <div className="flex items-center text-slate-500 text-sm mt-1 gap-4">
+                           <div className="flex items-center">
+                              <MapPin className="h-3.5 w-3.5 mr-1" />
+                              <span>Antalya</span>
+                           </div>
+                           <div className="flex items-center">
+                              <BedDouble className="h-3.5 w-3.5 mr-1" />
+                              <span>2 Yetişkin</span>
+                           </div>
+                         </div>
+                    </div>
+                    {/* Desktop Durum Rozeti */}
+                    <div className="hidden md:block">
+                        {getStatusBadge(res.status)}
+                    </div>
+                  </div>
 
-        <TabsContent value="completed">
-          {reservations.filter(r => r.status === 'completed').map(res => (
-            <ReservationCard key={res.id} data={res} />
-          ))}
-        </TabsContent>
+                  <Separator className="mb-4" />
+                    
+                  {/* Orta Kısım: Tarih Kutucukları */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                      <div className="bg-slate-50 p-3 rounded-lg flex items-center gap-3 border border-slate-100">
+                          <div className="bg-white p-2 rounded-md shadow-sm text-blue-600">
+                              <CalendarArrowDown className="h-5 w-5" />
+                          </div>
+                          <div>
+                              <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">Giriş Tarihi</p>
+                              <p className="text-sm font-semibold text-slate-900">{formatDate(res.checkInDate)}</p>
+                          </div>
+                      </div>
 
-        <TabsContent value="cancelled">
-          {reservations.filter(r => r.status === 'cancelled').map(res => (
-            <ReservationCard key={res.id} data={res} />
+                      <div className="bg-slate-50 p-3 rounded-lg flex items-center gap-3 border border-slate-100">
+                          <div className="bg-white p-2 rounded-md shadow-sm text-orange-600">
+                              <CalendarArrowUp className="h-5 w-5" />
+                          </div>
+                          <div>
+                              <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">Çıkış Tarihi</p>
+                              <p className="text-sm font-semibold text-slate-900">{formatDate(res.checkOutDate)}</p>
+                          </div>
+                      </div>
+                  </div>
+
+                  {/* Alt Kısım: Fiyat ve Aksiyon */}
+                  <div className="mt-auto flex items-center justify-between pt-2">
+                     <div className="flex flex-col">
+                        <span className="text-xs text-slate-400 font-medium">TOPLAM TUTAR</span>
+                        <div className="flex items-center gap-2 text-slate-900">
+                           <CreditCard className="h-5 w-5 text-slate-400" />
+                           <span className="text-2xl font-bold">{res.totalPrice.toLocaleString("tr-TR")} ₺</span>
+                        </div>
+                     </div>
+                     
+                     {res.status === "pending" && (
+                         <Button 
+                           variant="outline" 
+                           className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300 transition-colors"
+                           onClick={() => handleCancel(res._id)}
+                         >
+                            <XCircle className="h-4 w-4 mr-2" />
+                            İptal Et
+                         </Button>
+                     )}
+                  </div>
+                </div>
+
+              </div>
+            </Card>
           ))}
-        </TabsContent>
-      </Tabs>
+        </div>
+      )}
     </div>
   );
 };

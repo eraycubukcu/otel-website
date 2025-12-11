@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { format, differenceInCalendarDays, addDays } from "date-fns"; // Tarih işlemleri
 import { tr } from "date-fns/locale"; // Türkçe takvim için
-import { Calendar as CalendarIcon, Check, ChevronLeft } from "lucide-react";
+import { Calendar as CalendarIcon, Check, ChevronLeft, Loader2 } from "lucide-react";
 
 // Shadcn Bileşenleri
 import { Button } from "@/components/ui/button";
@@ -23,78 +23,104 @@ import {
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils"; // Shadcn utility
+import { reservationService } from "@/services/reservationService";
+import { roomService, type Room } from "@/services/roomService";
 
 const ReservationPage = () => {
-  const { id } = useParams(); // URL'den oda ID'sini al (örn: /rezervasyon/1)
-  const navigate = useNavigate();
+  const { id } = useParams(); // URL'den ID al
+  const navigate = useNavigate(); // Yönlendirme için
 
-  const roomsData = [
-    {
-      id: 1,
-      title: "Standart Çift Kişilik Oda",
-      image:
-        "https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&w=800&q=80",
-      price: 2500, // Hesaplama kolaylığı için number yaptım
-    },
-    {
-      id: 2,
-      title: "Deluxe Deniz Manzaralı",
-      image:
-        "https://images.unsplash.com/photo-1590490360182-c33d57733427?ixlib=rb-4.0.3&w=800&q=80",
-      price: 4000,
-    },
-    {
-      id: 3,
-      title: "King Suite",
-      image:
-        "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-4.0.3&w=800&q=80",
-      price: 7500,
-    },
-  ];
+  // State'ler
+  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
-  const selectedRoom = roomsData.find((r) => r.id === Number(id));
-
+  // Tarih State'i
   const [date, setDate] = useState<{
-    from: Date;
-    to?: Date;
+    from: Date | undefined;
+    to: Date | undefined;
   }>({
     from: new Date(),
     to: addDays(new Date(), 1),
   });
 
+  const [guestNote, setGuestNote] = useState("");
   const [totalPrice, setTotalPrice] = useState(0);
   const [nights, setNights] = useState(1);
 
   useEffect(() => {
+    const fetchRoom = async () => {
+      if (!id) return;
+      try {
+        const data = await roomService.getRoomById(id);
+        setSelectedRoom(data as unknown as Room); 
+      } catch (error) {
+        console.error("Oda yüklenirken hata:", error);
+        alert("Oda bilgileri alınamadı.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRoom();
+  }, [id]);
+
+  useEffect(() => {
     if (selectedRoom && date.from && date.to) {
       const dayCount = differenceInCalendarDays(date.to, date.from);
-      const validNights = dayCount > 0 ? dayCount : 1;
+      const validNights = dayCount > 0 ? dayCount : 0;
 
       setNights(validNights);
       setTotalPrice(validNights * selectedRoom.price);
     }
   }, [date, selectedRoom]);
 
+  const handleCompleteReservation = async () => {
+    if (!selectedRoom || !date.from || !date.to) {
+      alert("Lütfen geçerli bir tarih aralığı seçin.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      await reservationService.createReservation({
+        room: selectedRoom._id,
+        checkInDate: date.from,
+        checkOutDate: date.to,
+        totalPrice: totalPrice,
+        guestNote: guestNote,
+      });
+
+      alert("Rezervasyonunuz başarıyla oluşturuldu!");
+      navigate("/profile/reservations");
+
+    } catch (error: any) {
+      console.error(error);
+      alert(error.response?.data?.message || "Rezervasyon oluşturulamadı.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-slate-900" />
+      </div>
+    );
+  }
+
   if (!selectedRoom) {
     return <div className="p-10 text-center">Oda bulunamadı.</div>;
   }
 
-  const handleCompleteReservation = () => {
-    alert(
-      `Rezervasyon Alındı!\nToplam Tutar: ${totalPrice} TL\nTarih: ${format(
-        date.from,
-        "dd/MM/yyyy"
-      )} - ${date.to ? format(date.to, "dd/MM/yyyy") : "?"}`
-    );
-    navigate("/");
-  };
-
   return (
-    <div className="bg-slate-50 py-8">
+    <div className="bg-slate-50 py-8 min-h-screen">
       <div className="container max-w-6xl mx-auto px-4">
+        {/* Geri Dön Butonu */}
         <Button
           variant="ghost"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate(-1)} // React Router geri gitme
           className="mb-6 pl-0 hover:bg-transparent hover:text-slate-900 text-slate-500"
         >
           <ChevronLeft className="mr-2 h-4 w-4" />
@@ -102,11 +128,13 @@ const ReservationPage = () => {
         </Button>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* SOL TARAF - ODA KARTI */}
           <div className="lg:col-span-1">
             <Card className="border-none shadow-lg sticky top-8 overflow-hidden pt-0">
-              <div className="h-48 w-full overflow-hidden">
+              <div className="h-48 w-full overflow-hidden relative">
                 <img
-                  src={selectedRoom.image}
+                  src={selectedRoom.image || "https://via.placeholder.com/800x600"}
                   alt={selectedRoom.title}
                   className="w-full h-full object-cover"
                 />
@@ -116,7 +144,9 @@ const ReservationPage = () => {
                 <CardTitle className="text-xl text-slate-800">
                   {selectedRoom.title}
                 </CardTitle>
-                <p className="text-slate-500 text-sm">Maksimum 2 Yetişkin</p>
+                <p className="text-slate-500 text-sm">
+                   {selectedRoom.description?.substring(0, 100)}...
+                </p>
               </CardHeader>
 
               <CardContent className="space-y-4">
@@ -168,7 +198,10 @@ const ReservationPage = () => {
             </Card>
           </div>
 
+          {/* SAĞ TARAF - FORM */}
           <div className="lg:col-span-2 space-y-8">
+            
+            {/* 1. TARİH SEÇİMİ */}
             <Card className="border-none shadow-md">
               <CardHeader>
                 <CardTitle className="text-lg font-semibold text-slate-800">
@@ -185,7 +218,7 @@ const ReservationPage = () => {
                         variant={"outline"}
                         className={cn(
                           "w-full justify-start text-left font-normal h-12 border-slate-200",
-                          !date && "text-muted-foreground"
+                          !date.from && "text-muted-foreground"
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
@@ -209,9 +242,10 @@ const ReservationPage = () => {
                         mode="range"
                         defaultMonth={date?.from}
                         selected={date}
-                        onSelect={setDate}
+                        onSelect={(range: any) => setDate(range)}
                         numberOfMonths={2}
                         disabled={(date) => date < new Date()}
+                        locale={tr}
                       />
                     </PopoverContent>
                   </Popover>
@@ -230,43 +264,26 @@ const ReservationPage = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="firstName">Adınız</Label>
-                    <Input
-                      id="firstName"
-                      placeholder="Adınızı giriniz"
-                      className="h-11 border-slate-200"
-                    />
+                    <Input id="firstName" placeholder="Adınız" className="h-11 border-slate-200" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="lastName">Soyadınız</Label>
-                    <Input
-                      id="lastName"
-                      placeholder="Soyadınızı giriniz"
-                      className="h-11 border-slate-200"
-                    />
+                    <Input id="lastName" placeholder="Soyadınız" className="h-11 border-slate-200" />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="email">E-posta Adresi</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="ornek@email.com"
-                      className="h-11 border-slate-200"
-                    />
+                    <Input id="email" type="email" placeholder="ornek@email.com" className="h-11 border-slate-200" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Telefon Numarası</Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      placeholder="05XX XXX XX XX"
-                      className="h-11 border-slate-200"
-                    />
+                    <Input id="phone" type="tel" placeholder="05XX XXX XX XX" className="h-11 border-slate-200" />
                   </div>
                 </div>
 
@@ -274,8 +291,10 @@ const ReservationPage = () => {
                   <Label htmlFor="notes">Özel İstekler (Opsiyonel)</Label>
                   <Input
                     id="notes"
-                    placeholder="Varsa notlarınızı buraya yazabilirsiniz..."
+                    placeholder="Geç giriş, ekstra yastık vb..."
                     className="h-11 border-slate-200"
+                    value={guestNote}
+                    onChange={(e) => setGuestNote(e.target.value)}
                   />
                 </div>
               </CardContent>
@@ -283,8 +302,15 @@ const ReservationPage = () => {
                 <Button
                   className="w-full h-12 text-lg bg-slate-900 hover:bg-slate-800"
                   onClick={handleCompleteReservation}
+                  disabled={submitting || nights === 0}
                 >
-                  Rezervasyonu Tamamla ({totalPrice.toLocaleString("tr-TR")} ₺)
+                  {submitting ? (
+                    <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> İşleniyor...
+                    </>
+                  ) : (
+                    `Rezervasyonu Tamamla (${totalPrice.toLocaleString("tr-TR")} ₺)`
+                  )}
                 </Button>
               </CardFooter>
             </Card>
@@ -294,5 +320,4 @@ const ReservationPage = () => {
     </div>
   );
 };
-
 export default ReservationPage;

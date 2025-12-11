@@ -4,7 +4,7 @@ const reservationSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      required: True,
+      required: true,
       ref: "User",
     },
     room: {
@@ -18,7 +18,7 @@ const reservationSchema = new mongoose.Schema(
     },
     checkOutDate: {
       type: Date,
-      required: True,
+      required: true,
     },
     totalPrice: {
       type: Number,

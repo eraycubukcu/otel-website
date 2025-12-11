@@ -2,12 +2,13 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: "30d", // geçerlilik süresi 30 gün olsun
-  });
+const generateToken = (user) => {
+  return jwt.sign(
+    { id: user._id, role: user.role },
+    process.env.JWT_SECRET,
+    { expiresIn: "30d" }
+  );
 };
-
 export const registerUser = async (req, res) => {
   const { name, surname, email, password, phone } = req.body;
   // console.log("Veri:", req.body);
@@ -15,7 +16,9 @@ export const registerUser = async (req, res) => {
     // kullanıcı var mı
     const userExists = await User.findOne({ email });
     if (userExists) {
-      return res.status(400).json({ message: "Bu e-posta zaten kullanılıyor." });
+      return res
+        .status(400)
+        .json({ message: "Bu e-posta zaten kullanılıyor." });
     }
 
     // şifreyi hashleme kısmı
@@ -39,7 +42,7 @@ export const registerUser = async (req, res) => {
         surname: user.surname,
         email: user.email,
         role: user.role,
-        token: generateToken(user._id),
+        token: generateToken(user),
       });
     } else {
       res.status(400).json({ message: "Geçersiz kullanıcı verisi." });
@@ -60,7 +63,7 @@ export const loginUser = async (req, res) => {
         surname: user.surname,
         email: user.email,
         role: user.role,
-        token: generateToken(user._id),
+        token: generateToken(user),
       });
     } else {
       res.status(401).json({ message: "Geçersiz e posta veya şifre" });
