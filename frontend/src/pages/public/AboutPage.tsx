@@ -10,11 +10,11 @@ const About = () => {
               
               <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
                 
-                <h2 className="text-3xl font-bold text-slate-900 mb-6">
+                <h2 className="text-3xl font-medium text-slate-900 mb-6">
                   Armida City Hotel Hakkında
                 </h2>
 
-                <p className="text-slate-600 leading-relaxed mb-6 text-justify">
+                <p className="text-slate-600 leading-relaxed font-light mb-6 text-justify">
                   Otelimiz, Tamtur Turizm bünyesinde hizmet vermekte olup, turizm cenneti 
                   Çanakkale’nin merkezinde yer almaktadır. Tarihi ve turistik noktalara yakın 
                   konumuyla misafirlerine eşsiz bir deneyim sunan otelimiz, Aynalı Çarşı, Çimenlik 
@@ -26,9 +26,9 @@ const About = () => {
                   avantaj sunmaktadır.
                 </p>
 
-                <p className="text-slate-600 leading-relaxed text-justify">
+                <p className="text-slate-600 leading-relaxed font-light text-justify">
                   Misafirlerimizin konforu düşünülerek tasarlanan butik otelimiz, toplam 25 odadan 
-                  oluşmaktadır. <span className="font-bold text-slate-900">2019 yılında inşa edilen binamız depreme dayanıklı olup, 
+                  oluşmaktadır. <span className="font-medium text-slate-900">2019 yılında inşa edilen binamız depreme dayanıklı olup, 
                   Çanakkale merkezde bu özelliğe sahip nadir otellerden biridir.</span> Dömi klasik 
                   mimariye sahip olan otelimiz, geleneksel Çanakkale el sanatlarının sergilendiği 
                   lobisiyle sıcak ve huzurlu bir atmosfer sunmaktadır. Siz değerli misafirlerimizi ve 

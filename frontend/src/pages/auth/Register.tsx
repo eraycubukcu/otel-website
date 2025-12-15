@@ -59,9 +59,9 @@ const Register = () => {
   return (
     <Card className="border-none shadow-xl w-full max-w-md">
       <CardHeader className="space-y-1 text-center">
-        <CardTitle className="text-2xl font-bold">Hesap Oluştur</CardTitle>
+        <CardTitle className="text-2xl font-light">Hesap Oluştur</CardTitle>
         <CardDescription>
-          Otel rezervasyonu yapmak için hemen üye olun.
+          Rezervasyonu yapmak için hemen üye olun.
         </CardDescription>
       </CardHeader>
 
@@ -125,7 +125,7 @@ const Register = () => {
         <CardFooter className="flex flex-col gap-4">
           <Button
             type="submit"
-            className="w-full bg-slate-900 hover:bg-slate-800 text-lg py-5"
+            className="w-full bg-slate-900 hover:bg-slate-800 text-lg py-5 mt-5"
           >
             Kayıt Ol
           </Button>

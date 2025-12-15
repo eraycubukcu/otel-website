@@ -18,13 +18,13 @@ const Footer = () => {
           <span className="hidden sm:block text-gray-300">|</span>
 
           <a href="/reservation" className="hover:text-blue-600 transition-colors">
-            Reservation
+            Reservasyon Yap
           </a>
         </div>
 
         <div className="text-center">
           <p className="text-xs text-gray-400 mb-1">
-            &copy; 2025 Hotel. All Rights Reserved.
+            &copy; 2025 MoonRose Hotel.
           </p>
           <p className="text-xs text-gray-400 flex items-center justify-center gap-1">
             Designed by 

@@ -74,8 +74,7 @@ const AdminRooms = () => {
 
   const handleOpenDialog = (room?: Room) => {
     if (room) {
-      // Düzenleme Modu
-      setEditingId(room._id); // MongoDB ID'si (_id)
+      setEditingId(room._id);
       setFormData({
         title: room.title,
         category: room.category,
@@ -86,7 +85,6 @@ const AdminRooms = () => {
         image: room.image,
       });
     } else {
-      // Ekleme Modu (Formu Sıfırla)
       setEditingId(null);
       setFormData({
         title: "",
@@ -95,7 +93,7 @@ const AdminRooms = () => {
         capacity: "",
         size: "",
         description: "",
-        image: "https://images.unsplash.com/photo-1611892440504-42a792e24d32", // Varsayılan resim
+        image: "https://images.unsplash.com/photo-1611892440504-42a792e24d32",
       });
     }
     setIsDialogOpen(true);

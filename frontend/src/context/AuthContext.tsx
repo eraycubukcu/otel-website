@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setUser(null);
-    window.location.href = "/auth/login";
+    window.location.href = "/";
     // çıkış yapınca logine atıyor ancak anasayfa olarak değiştirebilir.
   };
 

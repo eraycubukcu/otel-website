@@ -14,7 +14,7 @@ const AdminSidebar = () => {
   ];
 
   return (
-    <aside className="w-64 bg-slate-900 text-white flex flex-col fixed h-full z-10">
+    <aside className="w-64 bg-zinc-950 text-white flex flex-col fixed h-full z-10">
       
       <div className="p-6 border-b border-slate-700">
         <h2 className="text-2xl font-bold tracking-tight text-white">Admin Panel</h2>
@@ -28,8 +28,8 @@ const AdminSidebar = () => {
             to={item.path}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
               location.pathname === item.path || (item.path !== "/admin" && location.pathname.startsWith(item.path))
-                ? "bg-blue-600 text-white shadow-md"
-                : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                ? "bg-zinc-400 text-white shadow-md"
+                : "text-slate-300 hover:bg-zinc-700 hover:text-white"
             }`}
           >
             {item.icon}
@@ -39,7 +39,7 @@ const AdminSidebar = () => {
       </nav>
 
       <div className="p-4 border-t border-slate-700">
-        <Link to="/" className="flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-slate-800 hover:text-red-300 w-full rounded-lg transition-colors">
+        <Link to="/" className="flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-zinc-700 hover:text-red-300 w-full rounded-lg transition-colors">
           <LogOut size={20} />
           <span className="font-medium">Siteye Dön</span>
         </Link>

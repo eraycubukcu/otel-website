@@ -12,13 +12,11 @@ const Contact = () => {
       <div className="container max-w-6xl mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
           
-          {/* --- SOL TARA: BİLGİLER (TEK KART) --- */}
           <Card className="border-none shadow-lg overflow-hidden py-0">
             <CardContent className="p-8 space-y-8">
               
-              {/* 1. BÖLÜM: İletişim Bilgileri */}
               <div>
-                <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <h3 className="text-xl font-medium text-slate-800 mb-4 flex items-center gap-2">
                   <span className="w-1 h-6 bg-red-600 rounded-full inline-block"></span>
                   İletişim Bilgileri
                 </h3>
@@ -43,9 +41,8 @@ const Contact = () => {
 
               <Separator />
 
-              {/* 2. BÖLÜM: Ulaşım */}
               <div>
-                <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <h3 className="text-xl font-medium text-slate-800 mb-4 flex items-center gap-2">
                   <span className="w-1 h-6 bg-blue-600 rounded-full inline-block"></span>
                   Ulaşım
                 </h3>
@@ -67,13 +64,11 @@ const Contact = () => {
 
               <Separator />
 
-              {/* 3. BÖLÜM: Yakındakiler */}
               <div>
-                <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <h3 className="text-xl font-medium text-slate-800 mb-4 flex items-center gap-2">
                    <span className="w-1 h-6 bg-purple-600 rounded-full inline-block"></span>
                    Yakındakiler
                 </h3>
-                {/* Burayı hafif renklendirilmiş bir kutu içine aldım ki diğerlerinden ayrılsın */}
                 <div className="bg-slate-50 rounded-lg p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex items-center gap-2 text-slate-700">
                     <Landmark className="w-4 h-4 text-purple-600 shrink-0" />
@@ -97,12 +92,10 @@ const Contact = () => {
             </CardContent>
           </Card>
 
-          {/* --- SAĞ TARAF: FORM (TEK KART) --- */}
-          {/* Sticky kaldırıldı, artık sol tarafla beraber kayacak */}
           <Card className="border-none shadow-lg h-full py-0">
             <CardContent className="p-8">
               <div className="mb-6">
-                 <h2 className="text-2xl font-bold text-slate-800">Bize Yazın</h2>
+                 <h2 className="text-2xl font-medium text-slate-800">Bize Yazın</h2>
                  <p className="text-sm text-slate-500 mt-1">
                    Rezervasyon talepleriniz veya görüşleriniz için formu doldurun.
                  </p>

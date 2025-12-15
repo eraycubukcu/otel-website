@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext"; // <-- YENİ EKLENDİ
+import { useAuth } from "@/context/AuthContext";
 
-// Shadcn Bileşenleri
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,7 +14,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Menu, X, User, LogOut, CalendarDays } from "lucide-react";
 
-// (NavigationMenu importların aynen kalsın...)
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -25,7 +23,7 @@ import {
 } from "@/components/ui/navigation-menu";
 
 const Header = () => {
-  const { user, logout } = useAuth(); // <-- Context'ten kullanıcıyı çektik
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -35,51 +33,48 @@ const Header = () => {
   };
 
   const navLinks = [
-    { name: "Home", path: "/" },
-    { name: "Rooms", path: "/rooms" },
-    { name: "About", path: "/about" },
-    { name: "Contact", path: "/contact" },
+    { name: "Anasayfa", path: "/" },
+    { name: "Odalarımız", path: "/rooms" },
+    { name: "Hakkımızda", path: "/about" },
+    { name: "İletişim", path: "/contact" },
   ];
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/70 backdrop-blur-lg">
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-8">
         
-        {/* LOGO */}
         <div className="flex-shrink-0">
           <Link to={"/"} className="flex items-center gap-2">
-            <img src="/vite.svg" alt="Logo" className="h-8 w-8 hover:scale-110 transition-transform" />
-            <span className="font-bold text-xl tracking-tight hidden sm:block">Otel</span>
+            <img src="/logo.svg" alt="Logo" className="h-8 w-8 hover:scale-110 transition-transform" />
+            <span className="text-xl tracking-tight hidden sm:block">MoonRose</span>
           </Link>
         </div>
 
-        {/* ORTA MENÜ (DESKTOP) */}
         <div className="hidden md:block">
           <NavigationMenu>
             <NavigationMenuList className="flex space-x-2">
               {navLinks.map((link) => (
                 <NavigationMenuItem key={link.name}>
-                  <Link to={link.path}>
-                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                  {/* --- DÜZELTME BURADA --- */}
+                  {/* Link dışarıda DEĞİL, içeride olmalı ve asChild kullanılmalı */}
+                  <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                    <Link to={link.path}>
                       {link.name}
-                    </NavigationMenuLink>
-                  </Link>
+                    </Link>
+                  </NavigationMenuLink>
+                  {/* --- DÜZELTME BİTTİ --- */}
                 </NavigationMenuItem>
               ))}
             </NavigationMenuList>
           </NavigationMenu>
         </div>
 
-        {/* SAĞ TARAF: Kullanıcı Durumuna Göre Değişen Alan */}
         <div className="flex items-center gap-4">
-          
           {user ? (
-            // --- KULLANICI GİRİŞ YAPMIŞSA GÖRÜNECEK KISIM ---
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                   <Avatar className="h-10 w-10 border border-slate-200">
-                    {/* Buraya kullanıcı resmi gelebilir */}
                     <AvatarImage src="https://github.com/shadcn.png" alt={user.name} />
                     <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
                   </Avatar>

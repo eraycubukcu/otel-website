@@ -24,7 +24,7 @@ const Login = () => {
   const [error, setError] = useState("");
   const [isLoading, setLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const   handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -51,12 +51,8 @@ const Login = () => {
   return (
     <Card className="border-none shadow-xl w-full max-w-md">
       <CardHeader className="space-y-1 text-center">
-        <div className="flex justify-center mb-4">
-          <span className="text-3xl font-extrabold text-slate-900 tracking-tighter">
-            OTEL
-          </span>
-        </div>
-        <CardTitle className="text-2xl font-bold">Giriş Yap</CardTitle>
+        
+        <CardTitle className="text-2xl font-light">Giriş Yap</CardTitle>
         <CardDescription>
           Devam etmek için hesabınıza giriş yapın
         </CardDescription>
@@ -115,7 +111,7 @@ const Login = () => {
         <CardFooter className="flex flex-col gap-4">
           <Button
             type="submit"
-            className="w-full bg-slate-900 hover:bg-slate-800 text-lg py-5"
+            className="w-full bg-slate-900 hover:bg-slate-800 text-lg py-5 mt-7"
           >
             Giriş Yap
           </Button>

@@ -8,8 +8,18 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import Autoplay from "embla-carousel-autoplay";
 import { FileText, MapPin } from "lucide-react";
+import { useState } from "react";
 
 const Home = () => {
+  const [mapKey, setMapKey] = useState(0);
+
+  const mapUrl =
+    "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d619.6817057651684!2d36.22903784437605!3d41.3676116225508!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x40887fa50c6c4409%3A0xafc00b5d8a3737f9!2sOTEL%20MOONROSE!5e1!3m2!1str!2str!4v1765828286499!5m2!1str!2str";
+
+  const handleResetLocation = () => {
+    setMapKey((prev) => prev + 1);
+  };
+
   const sliderData = [
     {
       id: 1,
@@ -38,10 +48,9 @@ const Home = () => {
       description:
         "Çanakkale Bölgesi’nin en taze ve organik ürünleriyle hazırlanan kahvaltımız, kahvaltı tabağı ile siz değerli misafirlerimize sunulmaktadır. Doğal lezzetler eşliğinde güne keyifli bir başlangıç yapabilir, yöresel tatların tadını çıkarabilirsiniz. Taptaze peynirler, zeytinler, ev yapımı reçeller ve daha birçok lezzet, özenle hazırlanan kahvaltımızda sizi bekliyor.",
       image:
-        "https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?ixlib=rb-4.0.3&w=1920&q=80", // Temsili kahvaltı resmi
-      reverse: false, // Resmi solda mı istiyorsun? (False = Sol, True = Sağ)
+        "https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?ixlib=rb-4.0.3&w=1920&q=80",
+      reverse: false, 
     },
-    // İkinci bir örnek (Tersi yapı)
     {
       id: 2,
       title: "Konforlu Odalar",
@@ -49,7 +58,7 @@ const Home = () => {
         "Günün yorgunluğunu atabileceğiniz, modern ve ferah dizayn edilmiş odalarımızda evinizin rahatlığını bulacaksınız. Ortopedik yataklar, ses yalıtımı ve özel iklimlendirme sistemleri ile kesintisiz bir uyku deneyimi sunuyoruz.",
       image:
         "https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&w=1920&q=80",
-      reverse: true, // Resmi sağa almak istersen bunu true yapabilirsin
+      reverse: true,
     },
   ];
 
@@ -57,22 +66,22 @@ const Home = () => {
     {
       id: 1,
       title: "Turizm İşletme Belgesi",
-      subTitle: "Hotel - Basit Konaklama Turizm İşletme Belgesi",
+      subTitle: "MoonRose Hotel - Basit Konaklama Turizm İşletme Belgesi",
     },
     {
       id: 2,
       title: "Yangın Güvenlik Raporu",
-      subTitle: "Hotel - Yapı Yangın Güvenlik Raporu",
+      subTitle: "MoonRose Hotel - Yapı Yangın Güvenlik Raporu",
     },
     {
       id: 3,
       title: "Yapı Kullanma İzin Belgesi",
-      subTitle: "Hotel - Yapı Kullanma İzin Belgesi",
+      subTitle: "MoonRose Hotel - Yapı Kullanma İzin Belgesi",
     },
     {
       id: 4,
       title: "Hijyen ve Haşere Belgesi",
-      subTitle: "Hotel - Hijyen ve Haşere Mücadelesi Hizmet Sözleşmesi",
+      subTitle: "MoonRose Hotel - Hijyen ve Haşere Mücadelesi Hizmet Sözleşmesi",
     },
   ];
 
@@ -97,7 +106,7 @@ const Home = () => {
                     className="h-full w-full object-cover"
                   />
                   <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                    <h2 className="text-4xl md:text-6xl font-bold text-white drop-shadow-lg">
+                    <h2 className="text-4xl md:text-6xl font-light tracking-tight text-white drop-shadow-lg">
                       {slide.title}
                     </h2>
                   </div>
@@ -134,7 +143,7 @@ const Home = () => {
 
                   <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col justify-center">
                     {feature.title && (
-                      <h4 className="text-xl md:text-2xl font-bold mb-3 text-slate-800">
+                      <h4 className="text-xl md:text-2xl font-medium mb-3 text-slate-800">
                         {feature.title}
                       </h4>
                     )}
@@ -162,7 +171,7 @@ const Home = () => {
                     <FileText size={48} className="text-red-600 stroke-[1.5]" />
                   </div>
 
-                  <h5 className="font-bold text-slate-900 text-lg mb-3 group-hover:text-red-600 transition-colors">
+                  <h5 className="font-medium text-slate-900 text-lg mb-3 group-hover:text-red-600 transition-colors">
                     {doc.title}
                   </h5>
 
@@ -177,7 +186,8 @@ const Home = () => {
       </div>
       <div className="w-full h-[400px] relative group bg-gray-200">
         <iframe
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3010.!2d28.!3d41.00843437135063!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14cab9be92011c27%3A0x236e6f6f37444fae!2sSultanahmet%20Meydan%C4%B1!5e0!3m2!1str!2str!4v1709725835261!5m2!1str!2str"
+          key={mapKey}
+          src={mapUrl}
           width="100%"
           height="100%"
           style={{ border: 0 }}
@@ -186,13 +196,28 @@ const Home = () => {
           referrerPolicy="no-referrer-when-downgrade"
           className="w-full h-full grayscale group-hover:grayscale-0 transition-all duration-700"
         ></iframe>
-        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm p-3 rounded-lg shadow-lg flex items-center gap-2">
-            <MapPin className="text-red-600" size={20} />
-            <span className="font-medium text-sm text-slate-800">Otel Konumu</span>
-        </div>
+        <button
+          onClick={handleResetLocation}
+          className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm p-3 rounded-lg shadow-lg flex items-center gap-2 hover:bg-white hover:scale-105 transition-all cursor-pointer group/btn z-10"
+        >
+          <MapPin
+            className="text-red-600 group-hover/btn:animate-bounce"
+            size={20}
+          />
+          <div className="flex flex-col items-start">
+            <span className="font-medium text-sm text-slate-800">
+              Otel Konumu
+            </span>
+            <span className="text-[10px] text-slate-500 hidden group-hover/btn:block">
+              Merkeze Odakla
+            </span>
+          </div>
+        </button>
       </div>
     </div>
   );
 };
 
 export default Home;
+
+//
