@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
+import {toast} from "sonner"
 
 const Register = () => {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ const Register = () => {
     setError("");
 
     if (formData.password !== formData.confirmPassword) {
-      setError("Şifreler birbirleriyle uyuşmuyor.");
+      toast.error("Şifreler birbirleriyle uyuşmuyor.");
       return;
     }
 
@@ -46,11 +47,10 @@ const Register = () => {
     try {
       const { confirmPassword, ...registerData } = formData;
       await register(registerData);
+      toast.success("Kayıt başarıyla oluşturuldu! Giriş yapabilirsiniz.");
       navigate("/");
     } catch (err: any) {
-      const errorMessage =
-        typeof err === "string" ? err : "Kayıt işlemi başarısız.";
-      setError(errorMessage);
+      toast.error("Kayıt başarısız. Bu e-posta adresi kullanılıyor olabilir.");
     } finally {
       setLoading(false);
     }

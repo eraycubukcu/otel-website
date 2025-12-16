@@ -20,6 +20,7 @@ import AdminRooms from "./pages/admin/AdminRooms";
 import AdminCustomers from "./pages/admin/AdminCustomers";
 import AdminMessages from "./pages/admin/AdminMessages";
 import AdminSettings from "./pages/admin/AdminSettings";
+import { Toaster } from "./components/ui/sonner";
 
 function App() {
   return (
@@ -68,6 +69,8 @@ function App() {
 
           <Route path="*" element={<NotFound />} />
         </Routes>
+
+        <Toaster position="top-center" richColors />
       </AuthProvider>
     </>
   );

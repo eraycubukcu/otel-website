@@ -117,9 +117,9 @@ const MyReservations = () => {
         </div>
       ) : (
         // DOLU LİSTE
-        <div className="grid gap-6">
+        <div className="grid gap-6 ">
           {reservations.map((res) => (
-            <Card key={res._id} className="overflow-hidden border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 group">
+            <Card key={res._id} className="overflow-hidden pt-0 pb-0 border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 group">
               <div className="flex flex-col md:flex-row">
                 
                 {/* SOL: Oda Görseli */}
@@ -127,7 +127,7 @@ const MyReservations = () => {
                    <img 
                     src={res.room?.image || "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80"} 
                     alt={res.room?.title || "Oda"} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover  transition-transform duration-500"
                    />
                    {/* Mobil için Durum Rozeti (Resim üstünde) */}
                    <div className="absolute top-3 right-3 md:hidden">
@@ -141,7 +141,7 @@ const MyReservations = () => {
                   {/* Üst Kısım: Başlık ve Durum */}
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                         <h3 className="text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                         <h3 className="text-xl font-bold text-slate-900 transition-colors">
                             {res.room ? res.room.title : <span className="text-red-400">Silinmiş Oda Bilgisi</span>}
                          </h3>
                          <div className="flex items-center text-slate-500 text-sm mt-1 gap-4">

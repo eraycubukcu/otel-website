@@ -25,6 +25,7 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils"; // Shadcn utility
 import { reservationService } from "@/services/reservationService";
 import { roomService, type Room } from "@/services/roomService";
+import { toast } from "sonner";
 
 const ReservationPage = () => {
   const { id } = useParams(); // URL'den ID al
@@ -91,7 +92,7 @@ const ReservationPage = () => {
         guestNote: guestNote,
       });
 
-      alert("Rezervasyonunuz başarıyla oluşturuldu!");
+      toast.success("Rezervasyonunuz başarıyla oluşturuldu! İyi tatiller.");
       navigate("/profile/reservations");
 
     } catch (error: any) {

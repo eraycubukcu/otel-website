@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Lock, Mail, AlertCircle } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -33,6 +34,7 @@ const Login = () => {
       await login({ email, password });
       const storedUser = localStorage.getItem("user");
       const userData = storedUser ? JSON.parse(storedUser) : null;
+      toast.success("Giriş başarılı! Hoş geldiniz.");
 
       if (userData?.role == "admin") {
         navigate("/admin");
@@ -42,7 +44,7 @@ const Login = () => {
       }
     } catch (err: any) {
       const errorMessage = typeof err === "string" ? err : "Giriş yapılamadı.";
-      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -60,12 +62,6 @@ const Login = () => {
 
       <form onSubmit={handleLogin}>
         <CardContent className="grid gap-4">
-          {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm flex items-center gap-2">
-              <AlertCircle size={16} />
-              {error}
-            </div>
-          )}
 
           <div className="grid gap-2">
             <Label htmlFor="email">E-posta</Label>
