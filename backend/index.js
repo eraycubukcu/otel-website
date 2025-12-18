@@ -8,6 +8,7 @@ import roomRoutes from "./routes/roomRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import reservationRoutes from "./routes/reservationRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
+import dashboardRoute from "./routes/dashboardRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -24,6 +25,7 @@ app.use("/api/rooms", roomRoutes);
 app.use("/api/reservations", reservationRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/dashboard", dashboardRoute);
 
 app.get("/", (req, res) => {
   res.send("Api çalışıyor.");
