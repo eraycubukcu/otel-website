@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-
+import { settingsService } from "@/services/settingsServices";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -27,10 +27,32 @@ const Header = () => {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  // Varsayılan değerler (Logo başta boş, başlık varsayılan)
+  const [siteLogo, setSiteLogo] = useState<string>("");
+  const [siteTitle, setSiteTitle] = useState<string>("MoonRose");
+
   const handleLogout = () => {
     logout();
     navigate("/");
   };
+
+  // Sayfa yüklendiğinde ayarları çek (Herkese açık)
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const data = await settingsService.getHotelSettings();
+        if (data) {
+          // Eğer veritabanından logo gelirse state'i güncelle
+          if (data.logo) setSiteLogo(data.logo);
+          // Eğer veritabanından başlık gelirse state'i güncelle
+          if (data.siteTitle) setSiteTitle(data.siteTitle);
+        }
+      } catch (error) {
+        console.error("Header ayarları çekilemedi (Varsayılanlar kullanılıyor).", error);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   const navLinks = [
     { name: "Anasayfa", path: "/" },
@@ -43,32 +65,42 @@ const Header = () => {
     <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/70 backdrop-blur-lg">
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-8">
         
+        {/* LOGO VE BAŞLIK ALANI */}
         <div className="flex-shrink-0">
           <Link to={"/"} className="flex items-center gap-2">
-            <img src="/logo.svg" alt="Logo" className="h-8 w-8 hover:scale-110 transition-transform" />
-            <span className="text-xl tracking-tight hidden sm:block">MoonRose</span>
+            {/* Sadece logo yüklendiyse göster, yoksa gösterme (Görsel bozulmasın) */}
+            {siteLogo && (
+              <img 
+                src={siteLogo} 
+                alt="Logo" 
+                className="h-8 w-8 hover:scale-110 transition-transform object-cover" 
+              />
+            )}
+            {/* Senin orijinal font ve sınıf ayarların */}
+            <span className="text-xl tracking-tight hidden sm:block">
+              {siteTitle}
+            </span>
           </Link>
         </div>
 
+        {/* MASAÜSTÜ MENÜ (Değiştirilmedi) */}
         <div className="hidden md:block">
           <NavigationMenu>
             <NavigationMenuList className="flex space-x-2">
               {navLinks.map((link) => (
                 <NavigationMenuItem key={link.name}>
-                  {/* --- DÜZELTME BURADA --- */}
-                  {/* Link dışarıda DEĞİL, içeride olmalı ve asChild kullanılmalı */}
                   <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
                     <Link to={link.path}>
                       {link.name}
                     </Link>
                   </NavigationMenuLink>
-                  {/* --- DÜZELTME BİTTİ --- */}
                 </NavigationMenuItem>
               ))}
             </NavigationMenuList>
           </NavigationMenu>
         </div>
 
+        {/* SAĞ TARAF: USER DROPDOWN VEYA LOGIN (Değiştirilmedi) */}
         <div className="flex items-center gap-4">
           {user ? (
             <DropdownMenu>
@@ -116,6 +148,7 @@ const Header = () => {
             </div>
           )}
 
+          {/* MOBİL MENÜ BUTONU */}
           <button
             className="md:hidden text-slate-800 focus:outline-none"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -125,6 +158,7 @@ const Header = () => {
         </div>
       </div>
 
+      {/* MOBİL MENÜ İÇERİĞİ (Değiştirilmedi) */}
       {isMobileMenuOpen && (
         <div className="md:hidden absolute top-16 left-0 w-full bg-white border-b border-gray-200 shadow-xl p-4 flex flex-col gap-4">
             {navLinks.map((link) => (

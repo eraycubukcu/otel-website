@@ -103,7 +103,7 @@ const AdminCustomers = () => {
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-8">
       <div>
         <h2 className="text-3xl font-bold tracking-tight text-slate-800">Müşteri Listesi</h2>
         <p className="text-slate-500">Kayıtlı müşterilerinizi görüntüleyin ve detaylarını inceleyin.</p>

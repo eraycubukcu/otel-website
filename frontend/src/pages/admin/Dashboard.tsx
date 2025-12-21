@@ -81,9 +81,9 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="space-y-8 p-8 bg-slate-50/50 min-h-screen">
+    <div className="flex flex-col h-screen w-full bg-slate-50/50 p-8 space-y-8 overflow-hidden">
       
-      <div className="flex items-center justify-between">
+      <div className="shrink-0 flex items-center justify-between">
         <div>
            <h2 className="text-3xl font-bold tracking-tight text-slate-900">Yönetim Paneli</h2>
            <p className="text-slate-500 mt-1">Otel durumunun anlık özeti.</p>
@@ -94,6 +94,7 @@ const Dashboard = () => {
         </div>
       </div>
 
+      {/* İstatistik Kartları */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, index) => (
           <Card key={index} className="border-none shadow-sm hover:shadow-md transition-all">

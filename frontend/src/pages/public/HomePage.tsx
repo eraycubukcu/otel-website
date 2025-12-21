@@ -8,48 +8,97 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import Autoplay from "embla-carousel-autoplay";
 import { FileText, MapPin } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { settingsService } from "@/services/settingsServices";
+
+// Backend'den gelen veri tipini tanımlıyoruz (Typescript için)
+interface SlideData {
+  imageUrl: string;
+  title?: string;
+}
 
 const Home = () => {
   const [mapKey, setMapKey] = useState(0);
+  
+  // Slider verilerini tutacak state
+  const [slides, setSlides] = useState<SlideData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const mapUrl =
-    "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d619.6817057651684!2d36.22903784437605!3d41.3676116225508!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x40887fa50c6c4409%3A0xafc00b5d8a3737f9!2sOTEL%20MOONROSE!5e1!3m2!1str!2str!4v1765828286499!5m2!1str!2str";
+  // Varsayılan Resimler (Veritabanından veri gelmezse bunlar görünür)
+  const defaultSlides: SlideData[] = [
+    {
+      imageUrl: "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&w=1920&q=80",
+      title: "Lüks Konaklama",
+    },
+    {
+      imageUrl: "https://images.unsplash.com/photo-1582719508461-905c673771fd?ixlib=rb-4.0.3&w=1920&q=80",
+      title: "Eşsiz Manzara",
+    },
+    {
+      imageUrl: "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&w=1920&q=80",
+      title: "Konforlu Odalar",
+    },
+  ];
+
+  const mapUrl = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d619.6817057651684!2d36.22903784437605!3d41.3676116225508!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x40887fa50c6c4409%3A0xafc00b5d8a3737f9!2sOTEL%20MOONROSE!5e1!3m2!1str!2str!4v1765828286499!5m2!1str!2str";
 
   const handleResetLocation = () => {
     setMapKey((prev) => prev + 1);
   };
 
-  const sliderData = [
-    {
-      id: 1,
-      image:
-        "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&w=1920&q=80",
-      title: "Lüks Konaklama",
-    },
-    {
-      id: 2,
-      image:
-        "https://images.unsplash.com/photo-1582719508461-905c673771fd?ixlib=rb-4.0.3&w=1920&q=80",
-      title: "Eşsiz Manzara",
-    },
-    {
-      id: 3,
-      image:
-        "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&w=1920&q=80",
-      title: "Konforlu Odalar",
-    },
-  ];
+  // Backend'den resimleri çekme işlemi
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const data = await settingsService.getHotelSettings();
+        
+        let fetchedSlides: SlideData[] = [];
+
+        if (data) {
+          // 1. İhtimal: Veri 'heroImages' adında bir dizi olarak geliyor
+          if (Array.isArray(data.heroImages) && data.heroImages.length > 0) {
+             // Gelen veri string mi yoksa obje mi kontrol et ve normalize et
+             fetchedSlides = data.heroImages.map((item: any) => {
+                if (typeof item === 'string') return { imageUrl: item, title: "MoonRose Otel" };
+                return { imageUrl: item.imageUrl || item.url, title: item.title || "MoonRose Otel" };
+             });
+          }
+          // 2. İhtimal: Belki tek bir 'coverImage' veya 'imageUrl' alanı vardır (Eski yapı)
+          else if (data.imageUrl || data.coverImage) {
+            fetchedSlides = [{ 
+              imageUrl: data.imageUrl || data.coverImage, 
+              title: "MoonRose Otel" 
+            }];
+          }
+        }
+
+        // Eğer geçerli resim bulduysak state'i güncelle, bulamadıysak varsayılanları koy
+        if (fetchedSlides.length > 0) {
+          setSlides(fetchedSlides);
+        } else {
+          setSlides(defaultSlides);
+        }
+
+      } catch (error) {
+        console.error("Slider verisi çekilemedi, varsayılanlar kullanılıyor.", error);
+        setSlides(defaultSlides);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSettings();
+  }, []);
 
   const features = [
     {
       id: 1,
       title: "Kahvaltı Salonu",
       description:
-        "Çanakkale Bölgesi’nin en taze ve organik ürünleriyle hazırlanan kahvaltımız, kahvaltı tabağı ile siz değerli misafirlerimize sunulmaktadır. Doğal lezzetler eşliğinde güne keyifli bir başlangıç yapabilir, yöresel tatların tadını çıkarabilirsiniz. Taptaze peynirler, zeytinler, ev yapımı reçeller ve daha birçok lezzet, özenle hazırlanan kahvaltımızda sizi bekliyor.",
+        "Çanakkale Bölgesi’nin en taze ve organik ürünleriyle hazırlanan kahvaltımız, kahvaltı tabağı ile siz değerli misafirlerimize sunulmaktadır. Doğal lezzetler eşliğinde güne keyifli bir başlangıç yapabilir, yöresel tatların tadını çıkarabilirsiniz.",
       image:
         "https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?ixlib=rb-4.0.3&w=1920&q=80",
-      reverse: false, 
+      reverse: false,
     },
     {
       id: 2,
@@ -85,8 +134,18 @@ const Home = () => {
     },
   ];
 
+  // Resim URL'ini düzelten yardımcı fonksiyon (Backend bazen tam URL vermez)
+  const getFullImageUrl = (url: string) => {
+    if (!url) return "";
+    if (url.startsWith("http") || url.startsWith("blob")) return url;
+    // Eğer localhost'ta çalışıyorsan ve resimler 'uploads' klasöründeyse:
+    // Backend portun neyse onu yaz (Örn: 5000)
+    return `http://localhost:5000${url.startsWith('/') ? '' : '/'}${url}`;
+  };
+
   return (
     <div>
+      {/* --- SLIDER ALANI --- */}
       <div>
         <Carousel
           className="w-full"
@@ -97,19 +156,24 @@ const Home = () => {
           ]}
         >
           <CarouselContent>
-            {sliderData.map((slide) => (
-              <CarouselItem key={slide.id}>
+            {/* Loading sırasında veya veri yokken hata vermemesi için güvenli map */}
+            {slides.map((slide, index) => (
+              <CarouselItem key={index}>
                 <div className="relative h-[500px] w-full overflow-hidden">
                   <img
-                    src={slide.image}
-                    alt={slide.title}
-                    className="h-full w-full object-cover"
+                    src={getFullImageUrl(slide.imageUrl)}
+                    alt={slide.title || "Slider Image"}
+                    className="h-full w-full object-cover transition-all duration-500"
+                    // Resim yüklenemezse (404 vb.) varsayılan resmi koy
+                    onError={(e) => {
+                      e.currentTarget.src = "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&w=1920&q=80";
+                    }}
                   />
-                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                    <h2 className="text-4xl md:text-6xl font-light tracking-tight text-white drop-shadow-lg">
-                      {slide.title}
+                  {/* <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                    <h2 className="text-4xl md:text-6xl font-light tracking-tight text-white drop-shadow-lg text-center px-4">
+                      {slide.title || "MoonRose Otel"}
                     </h2>
-                  </div>
+                  </div> */}
                 </div>
               </CarouselItem>
             ))}
@@ -120,6 +184,7 @@ const Home = () => {
         </Carousel>
       </div>
 
+      {/* --- ÖZELLİKLER ALANI --- */}
       <div className="w-full bg-slate-50 py-10">
         <div className="container max-w-5xl mx-auto px-4 flex flex-col gap-8">
           {features.map((feature, index) => (
@@ -158,6 +223,7 @@ const Home = () => {
         </div>
       </div>
 
+      {/* --- BELGELER ALANI --- */}
       <div className="w-full py-10 bg-white">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -184,6 +250,8 @@ const Home = () => {
           </div>
         </div>
       </div>
+
+      {/* --- HARİTA ALANI --- */}
       <div className="w-full h-[400px] relative group bg-gray-200">
         <iframe
           key={mapKey}
@@ -219,5 +287,3 @@ const Home = () => {
 };
 
 export default Home;
-
-//

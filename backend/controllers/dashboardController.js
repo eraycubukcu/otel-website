@@ -3,8 +3,8 @@ import Room from "../models/Room.js";
 import User from "../models/User.js";
 
 export const getDashboardStats = async (req, res, next) => {
-
   try {
+    // Varsayılan istatistikler
     let stats = {
       totalIncome: 0,
       activeReservationsCount: 0,
@@ -13,14 +13,16 @@ export const getDashboardStats = async (req, res, next) => {
       totalRooms: 0,
       occupiedRooms: 0
     };
-    let recentBookings = [];
 
+    // 1. DOLULUK ORANI HESAPLAMA
     try {
       const totalRooms = await Room.countDocuments();
-
+      
+      // Dolu odalar: Giriş yapmış veya rezervasyonu onaylanmış olanlar
       const occupiedRooms = await Reservation.countDocuments({
         status: { $in: ["checkedIn", "booked", "confirmed"] }
       });
+      
       stats.totalRooms = totalRooms;
       stats.occupiedRooms = occupiedRooms;
 
@@ -31,17 +33,21 @@ export const getDashboardStats = async (req, res, next) => {
       console.error("Doluluk Oranı Hatası:", e.message);
     }
 
+    // 2. GELİR VE DİĞER SAYIMLAR
     try {
+      // Toplam Gelir
       const incomeResult = await Reservation.aggregate([
         { $match: { status: { $ne: "cancelled" } } },
         { $group: { _id: null, total: { $sum: "$totalPrice" } } }
       ]);
       stats.totalIncome = incomeResult.length > 0 ? incomeResult[0].total : 0;
 
+      // Aktif Rezervasyon Sayısı
       stats.activeReservationsCount = await Reservation.countDocuments({
         status: { $in: ["booked", "checkedIn", "confirmed"] }
       });
 
+      // Toplam Üye Sayısı
       stats.totalGuests = await User.countDocuments({
         $or: [{ isAdmin: false }, { role: "user" }]
       });
@@ -50,24 +56,11 @@ export const getDashboardStats = async (req, res, next) => {
       console.error("❌ İstatistik Hatası:", e.message);
     }
 
-    try {
-      recentBookings = await Reservation.find()
-        .sort({ createdAt: -1 })
-        .limit(6)
-        .populate("userId", "name email")
-        .populate("user", "name email")
-        .populate("roomId", "title")
-        .populate("room", "title");
-
-      
-    } catch (e) {
-      console.error("❌ Son Rezervasyonlar Hatası:", e.message);
-    }
-
-    // Frontend'e gönder
+    // HATA VEREN "populate" KISMI TAMAMEN SİLİNDİ.
+    
+    // Frontend'e sadece stats gönderiyoruz
     res.status(200).json({
-      stats,
-      recentBookings
+      stats
     });
 
   } catch (err) {
