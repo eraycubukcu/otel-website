@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom"; 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,11 +18,18 @@ import {
   Loader2 
 } from "lucide-react";
 import { contactService, type ContactForm } from "@/services/contactService";
-import { toast } from "sonner"; // <-- Artık hata vermez
+import { settingsService } from "@/services/settingsServices";
+import { toast } from "sonner";
 
 const Contact = () => {
   const navigate = useNavigate(); 
   
+  const [contactInfo, setContactInfo] = useState({
+    address: "Adres yükleniyor...",
+    phone: "",
+    email: ""
+  });
+
   const [formData, setFormData] = useState<ContactForm>({
     name: "",
     email: "",
@@ -30,6 +37,25 @@ const Contact = () => {
     message: "",
   });
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const data = await settingsService.getHotelSettings();
+        if (data) {
+          setContactInfo({
+            address: data.address || "Adres bilgisi girilmemiş.",
+            phone: data.phone || "",
+            email: data.email || ""
+          });
+        }
+      } catch (error) {
+        console.error("İletişim bilgileri çekilemedi:", error);
+      }
+    };
+
+    fetchSettings();
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -43,21 +69,16 @@ const Contact = () => {
 
     try {
       await contactService.sendMessage(formData);
-      
-      // Yeşil başarı mesajı
       toast.success("Mesajınız başarıyla iletildi! Anasayfaya yönlendiriliyorsunuz...");
       
-      // Formu temizle
       setFormData({ name: "", email: "", subject: "", message: "" });
 
-      // 2 saniye sonra anasayfaya at
       setTimeout(() => {
         navigate("/");
       }, 2000);
 
     } catch (error) {
       console.error(error);
-      // Kırmızı hata mesajı
       toast.error("Mesaj gönderilirken bir sorun oluştu.");
     } finally {
       setLoading(false);
@@ -69,7 +90,6 @@ const Contact = () => {
       <div className="container max-w-6xl mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
           
-          {/* --- SOL TARAF: BİLGİ KARTI --- */}
           <Card className="border-none shadow-lg overflow-hidden py-0">
             <CardContent className="p-8 space-y-8">
               
@@ -79,21 +99,31 @@ const Contact = () => {
                   İletişim Bilgileri
                 </h3>
                 <div className="space-y-4 pl-3">
+                  
                   <div className="flex items-start gap-3 text-slate-600">
                     <MapPin className="w-5 h-5 text-red-600 mt-1 shrink-0" />
-                    <span>
-                      Körfez Mahallesi, 5. Kısım, Atatürk Bl. No:131, 55270<br />
-                      Atakum / Samsun, Türkiye
+                    <span className="whitespace-pre-line">
+                      {contactInfo.address}
                     </span>
                   </div>
-                  <div className="flex items-center gap-3 text-slate-600">
-                    <Phone className="w-5 h-5 text-blue-600 shrink-0" />
-                    <a href="tel:+903625030279" className="hover:text-blue-800 transition-colors">(0362) 503 02 79</a>
-                  </div>
-                  <div className="flex items-center gap-3 text-slate-600">
-                    <Mail className="w-5 h-5 text-orange-600 shrink-0" />
-                    <a href="mailto:info@moonrose.com" className="hover:text-orange-800 transition-colors">moonrose@gmail.com</a>
-                  </div>
+
+                  {contactInfo.phone && (
+                    <div className="flex items-center gap-3 text-slate-600">
+                      <Phone className="w-5 h-5 text-blue-600 shrink-0" />
+                      <a href={`tel:${contactInfo.phone}`} className="hover:text-blue-800 transition-colors">
+                        {contactInfo.phone}
+                      </a>
+                    </div>
+                  )}
+
+                  {contactInfo.email && (
+                    <div className="flex items-center gap-3 text-slate-600">
+                      <Mail className="w-5 h-5 text-orange-600 shrink-0" />
+                      <a href={`mailto:${contactInfo.email}`} className="hover:text-orange-800 transition-colors">
+                        {contactInfo.email}
+                      </a>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -150,7 +180,6 @@ const Contact = () => {
             </CardContent>
           </Card>
 
-          {/* --- SAĞ TARAF: İLETİŞİM FORMU --- */}
           <Card className="border-none shadow-lg h-full py-0">
             <CardContent className="p-8">
               <div className="mb-6">
@@ -161,7 +190,6 @@ const Contact = () => {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                
                 <div className="grid gap-2">
                   <Label htmlFor="name">Ad Soyad</Label>
                   <Input 
@@ -173,7 +201,6 @@ const Contact = () => {
                     required
                   />
                 </div>
-
                 <div className="grid gap-2">
                   <Label htmlFor="email">E-posta Adresi</Label>
                   <Input 
@@ -186,7 +213,6 @@ const Contact = () => {
                     required
                   />
                 </div>
-
                 <div className="grid gap-2">
                   <Label htmlFor="subject">Konu</Label>
                   <Input 
@@ -198,7 +224,6 @@ const Contact = () => {
                     required
                   />
                 </div>
-
                 <div className="grid gap-2">
                   <Label htmlFor="message">Mesajınız</Label>
                   <Textarea 
@@ -210,25 +235,23 @@ const Contact = () => {
                     required
                   />
                 </div>
-
                 <Button 
                     type="submit" 
                     disabled={loading}
                     className="w-full text-md py-6 cursor-pointer bg-slate-900 hover:bg-slate-800 transition-all"
                 >
-                   {loading ? (
-                     <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Gönderiliyor...
-                     </>
-                   ) : (
-                     <>
-                        <Send className="w-4 h-4 mr-2" />
-                        Mesajı Gönder
-                     </>
-                   )}
+                    {loading ? (
+                      <>
+                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                         Gönderiliyor...
+                      </>
+                    ) : (
+                      <>
+                         <Send className="w-4 h-4 mr-2" />
+                         Mesajı Gönder
+                      </>
+                    )}
                 </Button>
-
               </form>
             </CardContent>
           </Card>
