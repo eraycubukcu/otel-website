@@ -17,19 +17,36 @@ export const createReservation = async (req, res, next) => {
   try {
     const { room, checkInDate, checkOutDate, totalPrice, guestNote } = req.body;
 
-    if (new Date(checkInDate) >= new Date(checkOutDate)) {
+    const start = new Date(checkInDate);
+    const end = new Date(checkOutDate);
+
+    if (start >= end) {
       return res
         .status(400)
         .json({ message: "Çıkış tarihi giriş tarihinden sonra olmalıdır." });
     }
 
-    // todo : seçilen tarihlerde odanın dolu olup olmama kontrolu eklenecek
+    const existingReservation = await Reservation.findOne({
+      room: room,
+      status: { $ne: "cancelled" }, 
+      $and: [
+        { checkInDate: { $lt: end } }, 
+        { checkOutDate: { $gt: start } } 
+      ]
+    });
+
+    if (existingReservation) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Üzgünüz, seçtiğiniz tarihlerde bu oda zaten dolu." 
+      });
+    }
 
     const newReservation = new Reservation({
-      user : req.user.id,
+      user: req.user.id,
       room,
-      checkInDate,
-      checkOutDate,
+      checkInDate: start,
+      checkOutDate: end, 
       totalPrice,
       guestNote,
       status: "pending",
@@ -72,6 +89,21 @@ export const updateReservation = async (req, res, next) => {
       message: "Rezervasyon durumu güncellendi.",
       data: updateReservation,
     });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getRoomUnavailableDates = async (req, res, next) => {
+  try {
+    const { roomId } = req.params;
+
+    const reservations = await Reservation.find({
+      room: roomId,
+      status: { $ne: "cancelled" },
+    }).select("checkInDate checkOutDate");
+
+    res.status(200).json(reservations);
   } catch (err) {
     next(err);
   }

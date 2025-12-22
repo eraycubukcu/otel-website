@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { format, differenceInCalendarDays, addDays } from "date-fns"; // Tarih işlemleri
-import { tr } from "date-fns/locale"; // Türkçe takvim için
-import { Calendar as CalendarIcon, Check, ChevronLeft, Loader2 } from "lucide-react";
+import { format, differenceInCalendarDays, addDays, eachDayOfInterval, startOfDay } from "date-fns";
+import { tr } from "date-fns/locale";
+import { Calendar as CalendarIcon, ChevronLeft, Loader2, Info } from "lucide-react";
 
 // Shadcn Bileşenleri
 import { Button } from "@/components/ui/button";
@@ -22,49 +22,81 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils"; // Shadcn utility
+import { cn } from "@/lib/utils";
 import { reservationService } from "@/services/reservationService";
 import { roomService, type Room } from "@/services/roomService";
 import { toast } from "sonner";
 
 const ReservationPage = () => {
-  const { id } = useParams(); // URL'den ID al
-  const navigate = useNavigate(); // Yönlendirme için
+  const { id } = useParams();
+  const navigate = useNavigate();
 
   // State'ler
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  
+  // DOLU GÜNLER STATE'İ
+  const [disabledDates, setDisabledDates] = useState<Date[]>([]);
 
   // Tarih State'i
   const [date, setDate] = useState<{
     from: Date | undefined;
     to: Date | undefined;
   }>({
-    from: new Date(),
-    to: addDays(new Date(), 1),
+    from: undefined,
+    to: undefined,
   });
 
   const [guestNote, setGuestNote] = useState("");
   const [totalPrice, setTotalPrice] = useState(0);
   const [nights, setNights] = useState(1);
 
+  // 1. Verileri (Oda ve Takvim) Çek
   useEffect(() => {
-    const fetchRoom = async () => {
+    const fetchData = async () => {
       if (!id) return;
+      setLoading(true);
+
       try {
-        const data = await roomService.getRoomById(id);
-        setSelectedRoom(data as unknown as Room); 
+        // A) Oda Bilgisini Çek
+        const roomData = await roomService.getRoomById(id);
+        setSelectedRoom(roomData as unknown as Room);
+
+        // B) Dolu Tarihleri Çek
+        try {
+          const busyRanges = await reservationService.getUnavailableDates(id);
+          const blockedDates: Date[] = [];
+          
+          if (Array.isArray(busyRanges)) {
+            busyRanges.forEach((range: any) => {
+              const start = new Date(range.checkInDate);
+              const end = new Date(range.checkOutDate);
+
+              if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+                const interval = eachDayOfInterval({ start, end });
+                blockedDates.push(...interval);
+              }
+            });
+          }
+          setDisabledDates(blockedDates);
+          
+        } catch (calendarError) {
+          console.warn("Takvim verisi çekilemedi:", calendarError);
+        }
+
       } catch (error) {
         console.error("Oda yüklenirken hata:", error);
-        alert("Oda bilgileri alınamadı.");
+        toast.error("Oda bilgileri alınamadı.");
       } finally {
         setLoading(false);
       }
     };
-    fetchRoom();
+
+    fetchData();
   }, [id]);
 
+  // Fiyat Hesaplama
   useEffect(() => {
     if (selectedRoom && date.from && date.to) {
       const dayCount = differenceInCalendarDays(date.to, date.from);
@@ -77,7 +109,7 @@ const ReservationPage = () => {
 
   const handleCompleteReservation = async () => {
     if (!selectedRoom || !date.from || !date.to) {
-      alert("Lütfen geçerli bir tarih aralığı seçin.");
+      toast.warning("Lütfen geçerli bir tarih aralığı seçin.");
       return;
     }
 
@@ -97,7 +129,7 @@ const ReservationPage = () => {
 
     } catch (error: any) {
       console.error(error);
-      alert(error.response?.data?.message || "Rezervasyon oluşturulamadı.");
+      toast.error(error.response?.data?.message || "Rezervasyon oluşturulamadı. Seçilen tarihler dolu olabilir.");
     } finally {
       setSubmitting(false);
     }
@@ -118,10 +150,9 @@ const ReservationPage = () => {
   return (
     <div className="bg-slate-50 py-8 min-h-screen">
       <div className="container max-w-6xl mx-auto px-4">
-        {/* Geri Dön Butonu */}
         <Button
           variant="ghost"
-          onClick={() => navigate(-1)} // React Router geri gitme
+          onClick={() => navigate(-1)}
           className="mb-6 pl-0 hover:bg-transparent hover:text-slate-900 text-slate-500"
         >
           <ChevronLeft className="mr-2 h-4 w-4" />
@@ -164,17 +195,13 @@ const ReservationPage = () => {
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-600">Giriş Tarihi</span>
                     <span className="font-medium text-slate-800">
-                      {date?.from
-                        ? format(date.from, "dd MMM yyyy", { locale: tr })
-                        : "-"}
+                      {date?.from ? format(date.from, "dd MMM yyyy", { locale: tr }) : "-"}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-600">Çıkış Tarihi</span>
                     <span className="font-medium text-slate-800">
-                      {date?.to
-                        ? format(date.to, "dd MMM yyyy", { locale: tr })
-                        : "-"}
+                      {date?.to ? format(date.to, "dd MMM yyyy", { locale: tr }) : "-"}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
@@ -199,10 +226,8 @@ const ReservationPage = () => {
             </Card>
           </div>
 
-          {/* SAĞ TARAF - FORM */}
           <div className="lg:col-span-2 space-y-8">
             
-            {/* 1. TARİH SEÇİMİ */}
             <Card className="border-none shadow-md">
               <CardHeader>
                 <CardTitle className="text-lg font-semibold text-slate-800">
@@ -241,23 +266,50 @@ const ReservationPage = () => {
                       <Calendar
                         initialFocus
                         mode="range"
-                        defaultMonth={date?.from}
+                        defaultMonth={date?.from || new Date()}
                         selected={date}
                         onSelect={(range: any) => setDate(range)}
                         numberOfMonths={2}
-                        disabled={(date) => date < new Date()}
                         locale={tr}
+                        disabled={[
+                          ...disabledDates, 
+                          { before: startOfDay(new Date()) } 
+                        ]}
+                        modifiers={{
+                            booked: disabledDates // Dolu günleri 'booked' olarak işaretle
+                        }}
+                        modifiersClassNames={{
+                            booked: "bg-red-100 text-red-500 line-through opacity-100 font-medium hover:bg-red-100" 
+                        }}
                       />
+                      
+                      <div className="p-3 border-t bg-slate-50 flex items-center justify-between text-xs text-slate-600">
+                         <div className="flex items-center gap-2">
+                             <div className="w-3 h-3 bg-red-100 border border-red-300 rounded-sm"></div>
+                             <span>Dolu</span>
+                         </div>
+                         <div className="flex items-center gap-2">
+                             <div className="w-3 h-3 bg-slate-100 border border-slate-300 rounded-sm"></div>
+                             <span>Geçmiş</span>
+                         </div>
+                         <div className="flex items-center gap-2">
+                             <div className="w-3 h-3 bg-slate-900 rounded-sm"></div>
+                             <span>Seçili</span>
+                         </div>
+                      </div>
+
                     </PopoverContent>
                   </Popover>
-                  <p className="text-xs text-slate-400 mt-1">
-                    *Müsaitlik durumuna göre seçim yapabilirsiniz.
-                  </p>
+                  
+                  <div className="flex items-center gap-2 text-xs text-slate-500 mt-2">
+                     <Info className="w-4 h-4 text-slate-400" />
+                     <p>Kırmızı ile işaretli günler doludur ve seçilemez.</p>
+                  </div>
+
                 </div>
               </CardContent>
             </Card>
 
-            {/* 2. MİSAFİR BİLGİLERİ FORM */}
             <Card className="border-none shadow-md">
               <CardHeader>
                 <CardTitle className="text-lg font-semibold text-slate-800">
@@ -307,7 +359,7 @@ const ReservationPage = () => {
                 >
                   {submitting ? (
                     <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> İşleniyor...
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> İşleniyor...
                     </>
                   ) : (
                     `Rezervasyonu Tamamla (${totalPrice.toLocaleString("tr-TR")} ₺)`

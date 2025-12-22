@@ -58,4 +58,9 @@ export const reservationService = {
     const response = await api.delete(`/reservations/${id}`);
     return response.data;
   },
+
+  getUnavailableDates: async (roomId: string) => {
+    const response = await api.get(`/reservations/room/${roomId}`);
+    return response.data;
+  }
 };
