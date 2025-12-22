@@ -108,3 +108,23 @@ export const getRoomUnavailableDates = async (req, res, next) => {
     next(err);
   }
 };
+
+export const deleteReservation = async (req, res, next) => {
+  try {
+    const reservationId = req.params.id;
+
+    // Veritabanından sil
+    const deletedReservation = await Reservation.findByIdAndDelete(reservationId);
+
+    if (!deletedReservation) {
+      return res.status(404).json({ success: false, message: "Rezervasyon bulunamadı." });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Rezervasyon başarıyla silindi."
+    });
+  } catch (err) {
+    next(err);
+  }
+};

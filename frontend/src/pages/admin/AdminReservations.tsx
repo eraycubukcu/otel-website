@@ -75,17 +75,25 @@ const AdminReservations = () => {
   };
 
   // 3. İptal/Silme İşlemi
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("Bu rezervasyonu kalıcı olarak silmek istediğinize emin misiniz?")) return;
+  const handleRejectReservation = async (id: string) => {
+  if (!confirm("Bu rezervasyonu reddetmek (iptal etmek) istediğinize emin misiniz?")) return;
 
-    try {
-      await reservationService.deleteReservation(id);
-      toast.success("Rezervasyon silindi.");
-      setReservations((prev) => prev.filter((res) => res._id !== id));
-    } catch (error) {
-      toast.error("Silme işlemi başarısız.");
-    }
-  };
+  try {
+    await reservationService.updateReservation(id, "cancelled");
+    
+    setReservations((prevReservations) => 
+      prevReservations.map((res) => 
+        res._id === id ? { ...res, status: "cancelled" } : res
+      )
+    );
+
+    toast.success("Rezervasyon reddedildi (İptal edildi).");
+    
+  } catch (error) {
+    console.error("İşlem başarısız:", error);
+    toast.error("İşlem sırasında bir hata oluştu.");
+  }
+};
 
   // 4. Arama Filtresi (İsim, Email veya Oda adına göre)
   const filteredReservations = reservations.filter((res) => {
@@ -234,7 +242,7 @@ const AdminReservations = () => {
                               </DropdownMenuItem>
                           )}
                           <DropdownMenuItem 
-                            onClick={() => handleDelete(res._id)}
+                            onClick={() => handleRejectReservation(res._id)}
                             className="text-red-600 focus:text-red-700 cursor-pointer"
                           >
                             <Trash2 className="mr-2 h-4 w-4" />

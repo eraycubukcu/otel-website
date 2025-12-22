@@ -46,7 +46,6 @@ const Home = () => {
     setMapKey((prev) => prev + 1);
   };
 
-  // Backend'den resimleri çekme işlemi
   useEffect(() => {
     const fetchSettings = async () => {
       try {
@@ -55,15 +54,12 @@ const Home = () => {
         let fetchedSlides: SlideData[] = [];
 
         if (data) {
-          // 1. İhtimal: Veri 'heroImages' adında bir dizi olarak geliyor
           if (Array.isArray(data.heroImages) && data.heroImages.length > 0) {
-             // Gelen veri string mi yoksa obje mi kontrol et ve normalize et
              fetchedSlides = data.heroImages.map((item: any) => {
                 if (typeof item === 'string') return { imageUrl: item, title: "MoonRose Otel" };
                 return { imageUrl: item.imageUrl || item.url, title: item.title || "MoonRose Otel" };
              });
           }
-          // 2. İhtimal: Belki tek bir 'coverImage' veya 'imageUrl' alanı vardır (Eski yapı)
           else if (data.imageUrl || data.coverImage) {
             fetchedSlides = [{ 
               imageUrl: data.imageUrl || data.coverImage, 
@@ -72,7 +68,6 @@ const Home = () => {
           }
         }
 
-        // Eğer geçerli resim bulduysak state'i güncelle, bulamadıysak varsayılanları koy
         if (fetchedSlides.length > 0) {
           setSlides(fetchedSlides);
         } else {
@@ -134,18 +129,14 @@ const Home = () => {
     },
   ];
 
-  // Resim URL'ini düzelten yardımcı fonksiyon (Backend bazen tam URL vermez)
   const getFullImageUrl = (url: string) => {
     if (!url) return "";
     if (url.startsWith("http") || url.startsWith("blob")) return url;
-    // Eğer localhost'ta çalışıyorsan ve resimler 'uploads' klasöründeyse:
-    // Backend portun neyse onu yaz (Örn: 5000)
     return `http://localhost:5000${url.startsWith('/') ? '' : '/'}${url}`;
   };
 
   return (
     <div>
-      {/* --- SLIDER ALANI --- */}
       <div>
         <Carousel
           className="w-full"
@@ -156,7 +147,6 @@ const Home = () => {
           ]}
         >
           <CarouselContent>
-            {/* Loading sırasında veya veri yokken hata vermemesi için güvenli map */}
             {slides.map((slide, index) => (
               <CarouselItem key={index}>
                 <div className="relative h-[500px] w-full overflow-hidden">
@@ -164,7 +154,6 @@ const Home = () => {
                     src={getFullImageUrl(slide.imageUrl)}
                     alt={slide.title || "Slider Image"}
                     className="h-full w-full object-cover transition-all duration-500"
-                    // Resim yüklenemezse (404 vb.) varsayılan resmi koy
                     onError={(e) => {
                       e.currentTarget.src = "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&w=1920&q=80";
                     }}
@@ -184,7 +173,6 @@ const Home = () => {
         </Carousel>
       </div>
 
-      {/* --- ÖZELLİKLER ALANI --- */}
       <div className="w-full bg-slate-50 py-10">
         <div className="container max-w-5xl mx-auto px-4 flex flex-col gap-8">
           {features.map((feature, index) => (

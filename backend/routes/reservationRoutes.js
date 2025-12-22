@@ -4,7 +4,8 @@ import {
   getAllReservations,
   getUserReservations,
   updateReservation,
-  getRoomUnavailableDates
+  getRoomUnavailableDates,
+  deleteReservation
 } from "../controllers/reservationController.js";
 import { verifyToken, verifyAdmin } from "../utils/verifyToken.js"; // Senin middleware dosyan
 
@@ -19,5 +20,7 @@ router.get("/profile/reservations", verifyToken, getUserReservations);
 router.put("/:id", verifyAdmin, updateReservation);
 
 router.get("/room/:roomId", getRoomUnavailableDates);
+
+router.delete("/:id", verifyAdmin, deleteReservation);
 
 export default router;
