@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Save, Lock, Upload, ImageIcon, Loader2, Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
 
+import AdminFeatures from "@/pages/admin/AdminFeatures"; 
+
 const AdminSettings = () => {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -17,7 +19,6 @@ const AdminSettings = () => {
     siteTitle: "",
     siteDescription: "",
     logo: "",
-    // heroImage: "", // Artık tekil resim kullanmıyoruz (Fallback olarak kalabilir ama UI'da göstermeyeceğiz)
     email: "",
     phone: "",
     address: "",
@@ -32,7 +33,7 @@ const AdminSettings = () => {
     confirmPassword: ""
   });
 
-  // --- YENİ: Slider Resimleri Listesi ---
+  // Slider Resimleri Listesi
   const [heroImages, setHeroImages] = useState<string[]>([]);
 
   // Verileri Yükle
@@ -51,10 +52,7 @@ const AdminSettings = () => {
           facebook: data.facebook || ""
         });
 
-        // Backend'den gelen resim listesini state'e atıyoruz
-        // Eğer dizi boşsa ve eski sistemde 'heroImage' varsa onu listeye ekleyerek başlatabiliriz.
         if (data.heroImages && data.heroImages.length > 0) {
-           // Gelen verinin string mi obje mi olduğunu kontrol edip normalize edelim
            const normalizedImages = data.heroImages.map((img: any) => 
              typeof img === 'string' ? img : (img.imageUrl || img.url)
            );
@@ -70,7 +68,7 @@ const AdminSettings = () => {
     loadSettings();
   }, []);
 
-  // --- LOGO YÜKLEME (Eski Usül - Tekil) ---
+  // --- LOGO YÜKLEME ---
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -87,44 +85,33 @@ const AdminSettings = () => {
     }
   };
 
-  // --- YENİ: SLIDER RESMİEKLEME (Anında Kayıt) ---
+  // --- SLIDER RESMİ EKLEME ---
   const handleAddSlide = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setUploading(true);
     try {
-      // 1. Resmi Sunucuya Yükle
       const uploadedUrl = await settingsService.uploadImage(file);
-      
-      // 2. URL'i Veritabanındaki Listeye Ekle ($push)
       await settingsService.addSliderImage(uploadedUrl);
-      
-      // 3. UI'ı Güncelle
       setHeroImages(prev => [...prev, uploadedUrl]);
-      
       toast.success("Resim galeriye eklendi!");
     } catch (error) {
       console.error(error);
       toast.error("Resim galeriye eklenemedi.");
     } finally {
       setUploading(false);
-      // Input değerini sıfırla ki aynı resmi tekrar seçebilsin
       e.target.value = ""; 
     }
   };
 
-  // --- YENİ: SLIDER RESMİ SİLME (Anında Silme) ---
+  // --- SLIDER RESMİ SİLME ---
   const handleRemoveSlide = async (urlToDelete: string) => {
     if(!confirm("Bu resmi slider'dan silmek istediğinize emin misiniz?")) return;
 
     try {
-      // 1. Veritabanından Sil ($pull)
       await settingsService.removeSliderImage(urlToDelete);
-
-      // 2. UI'dan Sil
       setHeroImages(prev => prev.filter(url => url !== urlToDelete));
-      
       toast.success("Resim silindi.");
     } catch (error) {
       toast.error("Silme işlemi başarısız.");
@@ -135,7 +122,6 @@ const AdminSettings = () => {
   const handleSaveSettings = async () => {
     setLoading(true);
     try {
-      // Sadece formdaki verileri gönderiyoruz (Slider resimleri zaten anlık işlendi)
       await settingsService.updateHotelSettings(settingsForm);
       toast.success("Genel ayarlar kaydedildi.");
     } catch (error) {
@@ -165,7 +151,6 @@ const AdminSettings = () => {
     }
   };
 
-  // Input Helper
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSettingsForm({ ...settingsForm, [e.target.id]: e.target.value });
   };
@@ -178,13 +163,15 @@ const AdminSettings = () => {
       </div>
 
       <Tabs defaultValue="visuals" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 lg:w-[600px]">
-          <TabsTrigger value="visuals">Görseller & İçerik</TabsTrigger>
+        {/* TAB MENÜSÜ GÜNCELLENDİ: 4 Sütun */}
+        <TabsList className="grid w-full grid-cols-4 lg:w-[800px]">
+          <TabsTrigger value="visuals">Genel & Slider</TabsTrigger>
+          <TabsTrigger value="features">Vitrin & Özellikler</TabsTrigger> {/* EKLENEN KISIM */}
           <TabsTrigger value="contact">İletişim & Sosyal</TabsTrigger>
           <TabsTrigger value="security">Güvenlik</TabsTrigger>
         </TabsList>
 
-        {/* --- 1. GÖRSELLER --- */}
+        {/* --- 1. GÖRSELLER & SLIDER --- */}
         <TabsContent value="visuals" className="space-y-4">
           <Card>
             <CardHeader>
@@ -204,16 +191,16 @@ const AdminSettings = () => {
                   </div>
               </div>
 
-              {/* LOGO UPLOAD */}
+              {/* LOGO */}
               <div className="space-y-3 border-t pt-4">
                 <Label>Site Logosu</Label>
                 <div className="flex items-center gap-4">
-                   <div className="w-24 h-24 border rounded-lg bg-white flex items-center justify-center overflow-hidden relative">
+                    <div className="w-24 h-24 border rounded-lg bg-white flex items-center justify-center overflow-hidden relative">
                       {settingsForm.logo ? (
                           <img src={settingsForm.logo} alt="Logo" className="max-w-full max-h-full object-contain" />
                       ) : <ImageIcon className="text-slate-300" />}
-                   </div>
-                   <div className="space-y-2 flex-1">
+                    </div>
+                    <div className="space-y-2 flex-1">
                       <Input value={settingsForm.logo} onChange={handleChange} id="logo" placeholder="URL veya dosya yükleyin" />
                       <div className="flex items-center gap-2">
                         <Input type="file" id="uploadLogo" className="hidden" accept="image/*" onChange={handleLogoUpload} />
@@ -221,15 +208,14 @@ const AdminSettings = () => {
                            <Upload className="w-4 h-4" /> {uploading ? "..." : "Bilgisayardan Seç"}
                         </Label>
                       </div>
-                   </div>
+                    </div>
                 </div>
               </div>
 
-              {/* --- YENİ: ÇOKLU SLIDER YÖNETİMİ --- */}
+              {/* SLIDER YÖNETİMİ */}
               <div className="space-y-3 border-t pt-4">
                 <div className="flex items-center justify-between">
                     <Label className="text-base font-semibold">Ana Sayfa Slider Resimleri</Label>
-                    {/* Resim Ekleme Butonu */}
                     <div>
                         <Input type="file" id="uploadSlide" className="hidden" accept="image/*" onChange={handleAddSlide} disabled={uploading} />
                         <Label htmlFor="uploadSlide" className={`cursor-pointer bg-black text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 flex items-center gap-2 ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
@@ -239,23 +225,13 @@ const AdminSettings = () => {
                     </div>
                 </div>
                 
-                {/* Resim Galerisi Grid */}
                 {heroImages.length > 0 ? (
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
                         {heroImages.map((imgUrl, index) => (
                             <div key={index} className="relative group border rounded-lg overflow-hidden h-40 bg-slate-100">
-                                <img 
-                                    src={imgUrl} 
-                                    alt={`Slide ${index}`} 
-                                    className="w-full h-full object-cover" 
-                                />
-                                {/* Silme Butonu (Hover olunca gözükür) */}
+                                <img src={imgUrl} alt={`Slide ${index}`} className="w-full h-full object-cover" />
                                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                    <Button 
-                                        variant="destructive" 
-                                        size="sm" 
-                                        onClick={() => handleRemoveSlide(imgUrl)}
-                                    >
+                                    <Button variant="destructive" size="sm" onClick={() => handleRemoveSlide(imgUrl)}>
                                         <Trash2 className="w-4 h-4 mr-2" /> Sil
                                     </Button>
                                 </div>
@@ -279,7 +255,12 @@ const AdminSettings = () => {
           </Card>
         </TabsContent>
 
-        {/* --- 2. İLETİŞİM --- */}
+        {/* --- 2. YENİ TAB: VİTRİN & ÖZELLİKLER --- */}
+        <TabsContent value="features" className="space-y-4">
+            <AdminFeatures />
+        </TabsContent>
+
+        {/* --- 3. İLETİŞİM --- */}
         <TabsContent value="contact">
           <Card>
             <CardHeader><CardTitle>İletişim Bilgileri</CardTitle></CardHeader>
@@ -300,7 +281,7 @@ const AdminSettings = () => {
           </Card>
         </TabsContent>
 
-        {/* --- 3. GÜVENLİK --- */}
+        {/* --- 4. GÜVENLİK --- */}
         <TabsContent value="security">
           <Card>
             <CardHeader><CardTitle>Şifre Değiştir</CardTitle></CardHeader>

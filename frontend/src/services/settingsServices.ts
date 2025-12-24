@@ -1,35 +1,48 @@
 import api from "./api";
 
+// --- TİP TANIMLARI ---
+export interface Feature {
+  _id?: string;
+  title: string;
+  description: string;
+  image: string;
+}
+
+export interface SiteSettings {
+  _id?: string;
+  siteTitle?: string;
+  siteDescription?: string;
+  logo?: string;
+  heroImage?: string;   // Tekil resim desteği
+  heroImages?: any[];   // Çoklu slider
+  features?: Feature[]; // Özellik kartları
+  email?: string;
+  phone?: string;
+  address?: string;
+  instagram?: string;
+  facebook?: string;
+}
+
 export const settingsService = {
-  // Mevcut ayarları getir
   getHotelSettings: async () => {
-    const response = await api.get("/settings");
+    const response = await api.get<SiteSettings>("/settings");
     return response.data;
   },
 
-  // Genel Güncelleme (Başlık, Logo, Telefon vb. standart alanlar için)
-  updateHotelSettings: async (data: any) => {
+  updateHotelSettings: async (data: Partial<SiteSettings>) => {
     const response = await api.put("/settings", data);
     return response.data;
   },
 
-  // --- YENİ: Slider Resim Yönetimi ---
-
-  // Galeriye Yeni Resim Ekle (Backend'de $push çalıştırır)
   addSliderImage: async (imageUrl: string) => {
-    // Backend controller'daki 'newSlideImage' kontrolünü tetikler
     const response = await api.put("/settings", { newSlideImage: imageUrl });
     return response.data;
   },
 
-  // Galeriden Resim Sil (Backend'de $pull çalıştırır)
   removeSliderImage: async (imageUrl: string) => {
-    // Backend controller'daki 'removeSlideImage' kontrolünü tetikler
     const response = await api.put("/settings", { removeSlideImage: imageUrl });
     return response.data;
   },
-  
-  // -----------------------------------
 
   changePassword: async (passwords: any) => {
     const response = await api.post("/settings/change-password", passwords);
