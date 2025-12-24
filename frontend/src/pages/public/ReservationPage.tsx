@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { format, differenceInCalendarDays, addDays, eachDayOfInterval, startOfDay } from "date-fns";
+import { format, differenceInCalendarDays, eachDayOfInterval, startOfDay } from "date-fns";
 import { tr } from "date-fns/locale";
 import { Calendar as CalendarIcon, ChevronLeft, Loader2, Info } from "lucide-react";
 
@@ -26,10 +26,17 @@ import { cn } from "@/lib/utils";
 import { reservationService } from "@/services/reservationService";
 import { roomService, type Room } from "@/services/roomService";
 import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext"; // Kullanıcı bilgisi için ekledim
 
 const ReservationPage = () => {
-  const { id } = useParams();
+  // 1. URL'deki parametreyi alıyoruz.
+  // Router'da :slug veya :id ne yazıyorsa useParams onu yakalar.
+  // Biz buraya gelen değerin artık bir "Slug" (isim) olduğunu biliyoruz.
+  const params = useParams();
+  const slug = params.slug || params.id; // Her ihtimale karşı ikisini de kontrol et
+
   const navigate = useNavigate();
+  const { user } = useAuth(); // Kullanıcı bilgilerini otomatik doldurmak için
 
   // State'ler
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
@@ -50,60 +57,67 @@ const ReservationPage = () => {
 
   const [guestNote, setGuestNote] = useState("");
   const [totalPrice, setTotalPrice] = useState(0);
-  const [nights, setNights] = useState(1);
+  const [nights, setNights] = useState(0); // Başlangıçta 0
 
-  // 1. Verileri (Oda ve Takvim) Çek
+  // 1. Verileri (Oda ve Takvim) Çek - MANTIK BURADA DÜZELTİLDİ
   useEffect(() => {
     const fetchData = async () => {
-      if (!id) return;
+      if (!slug) return;
       setLoading(true);
 
       try {
-        // A) Oda Bilgisini Çek
-        const roomData = await roomService.getRoomById(id);
+        // A) Önce Slug (İsim) ile Odayı Bul
+        // roomService dosyanıza 'getRoomBySlug' eklediğinizden emin olun!
+        const roomData = await roomService.getRoomBySlug(slug);
         setSelectedRoom(roomData as unknown as Room);
 
-        // B) Dolu Tarihleri Çek
-        try {
-          const busyRanges = await reservationService.getUnavailableDates(id);
-          const blockedDates: Date[] = [];
-          
-          if (Array.isArray(busyRanges)) {
-            busyRanges.forEach((range: any) => {
-              const start = new Date(range.checkInDate);
-              const end = new Date(range.checkOutDate);
+        // B) Oda Bulunduysa, onun ID'sini kullanarak Takvimi (Dolu Günleri) Çek
+        if (roomData && roomData._id) {
+            try {
+              const busyRanges = await reservationService.getUnavailableDates(roomData._id);
+              const blockedDates: Date[] = [];
+              
+              if (Array.isArray(busyRanges)) {
+                busyRanges.forEach((range: any) => {
+                  const start = new Date(range.checkInDate);
+                  const end = new Date(range.checkOutDate);
 
-              if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-                const interval = eachDayOfInterval({ start, end });
-                blockedDates.push(...interval);
+                  if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+                    const interval = eachDayOfInterval({ start, end });
+                    blockedDates.push(...interval);
+                  }
+                });
               }
-            });
-          }
-          setDisabledDates(blockedDates);
-          
-        } catch (calendarError) {
-          console.warn("Takvim verisi çekilemedi:", calendarError);
+              setDisabledDates(blockedDates);
+            } catch (calendarError) {
+              console.warn("Takvim verisi çekilemedi:", calendarError);
+            }
         }
 
       } catch (error) {
         console.error("Oda yüklenirken hata:", error);
-        toast.error("Oda bilgileri alınamadı.");
+        toast.error("Oda bilgileri alınamadı veya bulunamadı.");
+        navigate("/rooms"); // Hata varsa listeye dön
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [id]);
+  }, [slug, navigate]);
 
   // Fiyat Hesaplama
   useEffect(() => {
     if (selectedRoom && date.from && date.to) {
       const dayCount = differenceInCalendarDays(date.to, date.from);
-      const validNights = dayCount > 0 ? dayCount : 0;
-
-      setNights(validNights);
-      setTotalPrice(validNights * selectedRoom.price);
+      // Giriş ve çıkış aynı gün olamaz, en az 1 gece
+      if (dayCount > 0) {
+         setNights(dayCount);
+         setTotalPrice(dayCount * selectedRoom.price);
+      } else {
+         setNights(0);
+         setTotalPrice(0);
+      }
     }
   }, [date, selectedRoom]);
 
@@ -117,7 +131,7 @@ const ReservationPage = () => {
       setSubmitting(true);
 
       await reservationService.createReservation({
-        room: selectedRoom._id,
+        room: selectedRoom._id, // Backend ID bekler, onu gönderiyoruz
         checkInDate: date.from,
         checkOutDate: date.to,
         totalPrice: totalPrice,
@@ -135,9 +149,16 @@ const ReservationPage = () => {
     }
   };
 
+  // Helper: Resim URL düzeltici (Senin kodunda yoktu ama garanti olsun diye ekledim, tasarım bozmaz)
+  const getFullImageUrl = (url: string) => {
+    if (!url) return "";
+    if (url.startsWith("http") || url.startsWith("blob")) return url;
+    return `http://localhost:5000${url.startsWith('/') ? '' : '/'}${url}`;
+  };
+
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-screen items-center justify-center bg-slate-50">
         <Loader2 className="h-10 w-10 animate-spin text-slate-900" />
       </div>
     );
@@ -166,9 +187,10 @@ const ReservationPage = () => {
             <Card className="border-none shadow-lg sticky top-8 overflow-hidden pt-0">
               <div className="h-48 w-full overflow-hidden relative">
                 <img
-                  src={selectedRoom.image || "https://via.placeholder.com/800x600"}
+                  src={getFullImageUrl(selectedRoom.image)}
                   alt={selectedRoom.title}
                   className="w-full h-full object-cover"
+                  onError={(e) => { e.currentTarget.src = "https://via.placeholder.com/800x600?text=Resim+Yok"; }}
                 />
               </div>
 
@@ -177,7 +199,7 @@ const ReservationPage = () => {
                   {selectedRoom.title}
                 </CardTitle>
                 <p className="text-slate-500 text-sm">
-                   {selectedRoom.description?.substring(0, 100)}...
+                    {selectedRoom.description?.substring(0, 100)}...
                 </p>
               </CardHeader>
 
@@ -276,7 +298,7 @@ const ReservationPage = () => {
                           { before: startOfDay(new Date()) } 
                         ]}
                         modifiers={{
-                            booked: disabledDates // Dolu günleri 'booked' olarak işaretle
+                            booked: disabledDates
                         }}
                         modifiersClassNames={{
                             booked: "bg-red-100 text-red-500 line-through opacity-100 font-medium hover:bg-red-100" 
@@ -284,26 +306,26 @@ const ReservationPage = () => {
                       />
                       
                       <div className="p-3 border-t bg-slate-50 flex items-center justify-between text-xs text-slate-600">
-                         <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2">
                              <div className="w-3 h-3 bg-red-100 border border-red-300 rounded-sm"></div>
                              <span>Dolu</span>
-                         </div>
-                         <div className="flex items-center gap-2">
+                          </div>
+                          <div className="flex items-center gap-2">
                              <div className="w-3 h-3 bg-slate-100 border border-slate-300 rounded-sm"></div>
                              <span>Geçmiş</span>
-                         </div>
-                         <div className="flex items-center gap-2">
+                          </div>
+                          <div className="flex items-center gap-2">
                              <div className="w-3 h-3 bg-slate-900 rounded-sm"></div>
                              <span>Seçili</span>
-                         </div>
+                          </div>
                       </div>
 
                     </PopoverContent>
                   </Popover>
                   
                   <div className="flex items-center gap-2 text-xs text-slate-500 mt-2">
-                     <Info className="w-4 h-4 text-slate-400" />
-                     <p>Kırmızı ile işaretli günler doludur ve seçilemez.</p>
+                      <Info className="w-4 h-4 text-slate-400" />
+                      <p>Kırmızı ile işaretli günler doludur ve seçilemez.</p>
                   </div>
 
                 </div>
@@ -321,18 +343,19 @@ const ReservationPage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="firstName">Adınız</Label>
-                    <Input id="firstName" placeholder="Adınız" className="h-11 border-slate-200" />
+                    {/* Otomatik doldurma eklendi */}
+                    <Input id="firstName" defaultValue={user?.name || ""} placeholder="Adınız" className="h-11 border-slate-200" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="lastName">Soyadınız</Label>
-                    <Input id="lastName" placeholder="Soyadınız" className="h-11 border-slate-200" />
+                    <Input id="lastName" defaultValue={user?.surname || ""} placeholder="Soyadınız" className="h-11 border-slate-200" />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="email">E-posta Adresi</Label>
-                    <Input id="email" type="email" placeholder="ornek@email.com" className="h-11 border-slate-200" />
+                    <Input id="email" type="email" defaultValue={user?.email || ""} placeholder="ornek@email.com" className="h-11 border-slate-200" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Telefon Numarası</Label>
@@ -353,7 +376,7 @@ const ReservationPage = () => {
               </CardContent>
               <CardFooter className="pt-0">
                 <Button
-                  className="w-full h-12 text-lg bg-slate-900 hover:bg-slate-800"
+                  className="w-full h-12 text-lg bg-slate-900 hover:bg-slate-800 cursor-pointer"
                   onClick={handleCompleteReservation}
                   disabled={submitting || nights === 0}
                 >
@@ -373,4 +396,5 @@ const ReservationPage = () => {
     </div>
   );
 };
+
 export default ReservationPage;

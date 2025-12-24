@@ -33,11 +33,11 @@ function App() {
             <Route path="/about" element={<About />}></Route>
             <Route path="/contact" element={<Contact />}></Route>
             <Route path="/reservation" element={<Rooms />}></Route>
-            <Route path="/reservation/:id" element={<ReservationPage />} />
+            <Route path="/reservation/:slug" element={<ReservationPage />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/reservations" element={<MyReservations />} />
             <Route
-              path="/reservation/:id"
+              path="/reservation/:slug"
               element={
                 <ProtectedRoute requiredRole="user">
                   <ReservationPage />

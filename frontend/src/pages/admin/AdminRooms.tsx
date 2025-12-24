@@ -18,7 +18,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -34,15 +33,16 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Pencil, Trash2, Plus, Image as ImageIcon, Loader2 } from "lucide-react";
+import { Pencil, Trash2, Plus, Image as ImageIcon, Loader2, Upload } from "lucide-react";
 import { roomService, type Room } from "@/services/roomService";
+import { toast } from "sonner"; // Hata bildirimleri için
 
 const AdminRooms = () => {
-  // state yönetimi
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false); // Yükleme durumu
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
@@ -61,6 +61,7 @@ const AdminRooms = () => {
       setRooms(data);
     } catch (error) {
       console.log(error);
+      toast.error("Odalar yüklenemedi.");
     } finally {
       setIsLoading(false);
     }
@@ -70,7 +71,30 @@ const AdminRooms = () => {
     fetchRooms();
   }, []);
 
-  // functions
+  // --- RESİM YÜKLEME ---
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const url = await roomService.uploadImage(file);
+      setFormData({ ...formData, image: url });
+      toast.success("Resim yüklendi.");
+    } catch (error) {
+      console.error(error);
+      toast.error("Resim yüklenirken hata oluştu.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // Helper: Resim URL Düzeltici
+  const getFullImageUrl = (url: string) => {
+    if (!url) return "";
+    if (url.startsWith("http") || url.startsWith("blob")) return url;
+    return `http://localhost:5000${url.startsWith('/') ? '' : '/'}${url}`;
+  };
 
   const handleOpenDialog = (room?: Room) => {
     if (room) {
@@ -93,45 +117,68 @@ const AdminRooms = () => {
         capacity: "",
         size: "",
         description: "",
-        image: "https://images.unsplash.com/photo-1611892440504-42a792e24d32",
+        image: "",
       });
     }
     setIsDialogOpen(true);
   };
 
   const handleSave = async () => {
+    // Validasyon
+    if (!formData.image) {
+        toast.warning("Lütfen bir oda resmi yükleyin.");
+        return;
+    }
+    if (!formData.title) {
+        toast.warning("Lütfen oda başlığı girin.");
+        return;
+    }
+
     setIsSaving(true);
     try {
+      // Sayı dönüşümü (400 Hatasını önler)
+      const payload = {
+        ...formData,
+        price: Number(formData.price), 
+      };
+
       if (editingId) {
-        await roomService.updateRoom(editingId, formData);
+        await roomService.updateRoom(editingId, payload);
+        toast.success("Oda güncellendi.");
       } else {
-        await roomService.createRoom(formData);
+        await roomService.createRoom(payload);
+        toast.success("Yeni oda eklendi.");
       }
 
       setIsDialogOpen(false);
-      fetchRooms(); // Listeyi yenile
+      fetchRooms(); 
     } catch (error: any) {
-      console.log(error);
+      console.error(error);
+      // Backend'den gelen hatayı göster
+      toast.error(error.response?.data?.message || "Bir hata oluştu.");
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Sil (DELETE)
   const handleDelete = async (id: string) => {
     if (window.confirm("Bu odayı silmek istediğinize emin misiniz?")) {
       try {
         await roomService.deleteRoom(id);
-        fetchRooms(); // Listeyi yenile
+        toast.success("Oda silindi.");
+        fetchRooms();
       } catch (error) {
         console.log(error);
+        toast.error("Silme başarısız.");
       }
     }
   };
 
   if (isLoading) {
     return (
-      <div className="p-8 text-center text-slate-500">Odalar yükleniyor...</div>
+      <div className="p-8 text-center text-slate-500 flex justify-center">
+        <Loader2 className="animate-spin mr-2" /> Odalar yükleniyor...
+      </div>
     );
   }
 
@@ -183,13 +230,10 @@ const AdminRooms = () => {
                   <TableRow key={room._id}>
                     <TableCell>
                       <img
-                        src={room.image}
+                        src={getFullImageUrl(room.image)}
                         alt={room.title}
                         className="w-10 h-10 rounded-md object-cover bg-slate-100"
-                        onError={(e) =>
-                          (e.currentTarget.src =
-                            "https://via.placeholder.com/150")
-                        } // Kırık resim önlemi
+                        onError={(e) => (e.currentTarget.src = "https://via.placeholder.com/150")}
                       />
                     </TableCell>
                     <TableCell className="font-medium">{room.title}</TableCell>
@@ -228,7 +272,7 @@ const AdminRooms = () => {
         </CardContent>
       </Card>
 
-      {/* --- MODAL (DIALOG) --- */}
+      {/* --- MODAL --- */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -241,15 +285,48 @@ const AdminRooms = () => {
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
+            
+            {/* --- RESİM YÜKLEME ALANI --- */}
+            <div className="flex justify-center mb-4">
+                <div className="relative w-full h-48 bg-slate-50 rounded-lg border-2 border-dashed border-slate-300 flex flex-col items-center justify-center overflow-hidden group hover:bg-slate-100 transition-colors">
+                  {formData.image ? (
+                    <>
+                      <img src={getFullImageUrl(formData.image)} className="w-full h-full object-cover" alt="Preview" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                         <span className="text-white font-medium flex items-center gap-2"><Upload className="w-4 h-4"/> Resmi Değiştir</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-slate-400 flex flex-col items-center pointer-events-none">
+                      <ImageIcon className="w-10 h-10 mb-2" />
+                      <span className="text-sm">Oda Görseli Seçin</span>
+                    </div>
+                  )}
+                  
+                  {/* Dosya Seçme Inputu */}
+                  <input 
+                    type="file" 
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" 
+                    accept="image/*" 
+                    onChange={handleImageUpload} 
+                    disabled={isUploading}
+                  />
+                  
+                  {isUploading && (
+                    <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+                        <Loader2 className="animate-spin text-slate-900" />
+                    </div>
+                  )}
+                </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="title">Oda Başlığı</Label>
                 <Input
                   id="title"
                   value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="Örn: Deluxe Deniz Manzaralı"
                 />
               </div>
@@ -257,9 +334,7 @@ const AdminRooms = () => {
                 <Label htmlFor="category">Kategori</Label>
                 <Select
                   value={formData.category}
-                  onValueChange={(val) =>
-                    setFormData({ ...formData, category: val })
-                  }
+                  onValueChange={(val) => setFormData({ ...formData, category: val })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Kategori Seç" />
@@ -281,9 +356,7 @@ const AdminRooms = () => {
                   id="price"
                   type="number"
                   value={formData.price}
-                  onChange={(e) =>
-                    setFormData({ ...formData, price: Number(e.target.value) })
-                  }
+                  onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
                 />
               </div>
               <div className="grid gap-2">
@@ -291,9 +364,7 @@ const AdminRooms = () => {
                 <Input
                   id="size"
                   value={formData.size}
-                  onChange={(e) =>
-                    setFormData({ ...formData, size: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, size: e.target.value })}
                   placeholder="Örn: 25 m²"
                 />
               </div>
@@ -304,26 +375,9 @@ const AdminRooms = () => {
               <Input
                 id="capacity"
                 value={formData.capacity}
-                onChange={(e) =>
-                  setFormData({ ...formData, capacity: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
                 placeholder="Örn: 2 Yetişkin, 1 Çocuk"
               />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="image">Resim URL</Label>
-              <div className="flex items-center gap-2">
-                <ImageIcon className="text-slate-400" />
-                <Input
-                  id="image"
-                  value={formData.image}
-                  onChange={(e) =>
-                    setFormData({ ...formData, image: e.target.value })
-                  }
-                  placeholder="https://..."
-                />
-              </div>
             </div>
 
             <div className="grid gap-2">
@@ -331,9 +385,7 @@ const AdminRooms = () => {
               <Textarea
                 id="description"
                 value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Oda hakkında kısa bilgi..."
               />
             </div>
@@ -343,14 +395,14 @@ const AdminRooms = () => {
             <Button
               variant="outline"
               onClick={() => setIsDialogOpen(false)}
-              disabled={isSaving}
+              disabled={isSaving || isUploading}
             >
               İptal
             </Button>
             <Button
               onClick={handleSave}
               className="bg-slate-900"
-              disabled={isSaving}
+              disabled={isSaving || isUploading}
             >
               {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {editingId ? "Güncelle" : "Kaydet"}

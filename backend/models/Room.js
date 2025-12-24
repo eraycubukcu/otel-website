@@ -1,10 +1,16 @@
 import mongoose from "mongoose";
+import slugify from "slugify"; 
 
 const roomSchema = new mongoose.Schema(
   {
     title: {
       type: String,
       required: true,
+      unique: true, // Başlıklar benzersiz olmalı
+    },
+    slug: {
+      type: String,
+      unique: true,
     },
     category: {
       type: String,
@@ -15,13 +21,12 @@ const roomSchema = new mongoose.Schema(
       required: true,
     },
     capacity: {
-      type: String, // 2 yetişkin 1 çocuk şeklinde
+      type: String, 
       required: true,
     },
     size: {
-      // kaç m'2 ise oda o kısım
       type: String,
-      requred: true,
+      required: true,
     },
     description: {
       type: String,
@@ -31,19 +36,28 @@ const roomSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    // sonradan eklenebilir özellik kısmı
     features: {
       type: [String],
       default: [],
     },
     isAvailable: {
-      // oda bakımda vs ise
       type: Boolean,
       default: true,
     },
   },
   { timestamps: true }
 );
+
+roomSchema.pre("validate", function () {
+  if (this.title) {
+    this.slug = slugify(this.title, {
+      lower: true,
+      strict: true,
+      locale: "tr",
+      trim: true
+    });
+  }
+});
 
 const Room = mongoose.model("Room", roomSchema);
 export default Room;

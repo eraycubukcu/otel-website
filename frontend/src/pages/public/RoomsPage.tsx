@@ -37,15 +37,19 @@ const Rooms = () => {
     fetchRooms();
   }, []);
 
-  const handleBookingClick = (roomId: string) => {
+  // --- GÜNCELLENEN KISIM ---
+  // Artık ID değil Slug alıyoruz
+  const handleBookingClick = (roomSlug: string) => {
     if (user) {
-      navigate(`/reservation/${roomId}`);
+      // URL artık /reservation/king-suite gibi olacak
+      navigate(`/reservation/${roomSlug}`);
     } else {
       navigate("/auth/login", {
-        state: { returnUrl: `/reservation/${roomId}` },
+        state: { returnUrl: `/reservation/${roomSlug}` },
       });
     }
   };
+  // -------------------------
 
   const filteredRooms =
     activeCategory === "hepsi"
@@ -98,14 +102,14 @@ const Rooms = () => {
           </div>
         </div>
 
-        {/* --- Rooms Grid (ORTA BOYUT: 3 sütun, gap-8) --- */}
+        {/* --- Rooms Grid --- */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredRooms.map((room) => (
             <div
               key={room._id}
               className="group flex flex-col bg-white rounded-2xl overflow-hidden border border-slate-100 hover:border-slate-200 hover:shadow-xl transition-all duration-500 ease-out"
             >
-              {/* Image Container (ORTA BOYUT: aspect-[3/2]) */}
+              {/* Image Container */}
               <div className="relative aspect-[3/2] overflow-hidden bg-slate-100">
                 <img
                   src={room.image}
@@ -128,7 +132,7 @@ const Rooms = () => {
                 </span>
               </div>
 
-              {/* Content (ORTA BOYUT: p-6) */}
+              {/* Content */}
               <div className="flex flex-col flex-grow p-6">
                 <div className="mb-4">
                   <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-blue-900 transition-colors line-clamp-1">
@@ -139,7 +143,7 @@ const Rooms = () => {
                   </p>
                 </div>
 
-                {/* Features (Orta Boyut İkonlar ve Yazılar) */}
+                {/* Features */}
                 <div className="flex items-center gap-5 mb-6 text-slate-400">
                    <div className="flex items-center gap-2" title="Kapasite">
                       <Users className="w-4 h-4" />
@@ -155,12 +159,15 @@ const Rooms = () => {
                    </div>
                 </div>
 
-                {/* Action Button (ORTA BOYUT: h-11) */}
+                {/* Action Button */}
                 <div className="mt-auto">
                   <Button
                     variant="outline"
                     className="w-full h-11 text-sm rounded-xl border-slate-200 text-slate-900 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all duration-300 group/btn"
-                    onClick={() => handleBookingClick(room._id)}
+                    // --- GÜNCELLENEN KISIM ---
+                    // Burada room._id yerine room.slug gönderiyoruz
+                    onClick={() => handleBookingClick(room.slug)}
+                    // -------------------------
                   >
                     <span>Detaylar ve Rezervasyon</span>
                     <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
