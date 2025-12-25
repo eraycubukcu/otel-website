@@ -13,6 +13,7 @@ import settingsRouter from "./routes/settingsRoutes.js";
 import { fileURLToPath } from "url";
 import uploadRoute from "./routes/upload.js";
 import path from "path";
+import sitemapRoute from "./routes/sitemapRoute.js";
 
 dotenv.config();
 connectDB();
@@ -30,6 +31,7 @@ app.use(cookieParser());
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")))
 
+app.use(sitemapRoute);
 app.use("/api/auth", authRoutes);
 app.use("/api/rooms", roomRoutes);
 app.use("/api/reservations", reservationRoutes);

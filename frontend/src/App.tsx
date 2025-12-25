@@ -21,11 +21,13 @@ import AdminCustomers from "./pages/admin/AdminCustomers";
 import AdminMessages from "./pages/admin/AdminMessages";
 import AdminSettings from "./pages/admin/AdminSettings";
 import { Toaster } from "./components/ui/sonner";
+import ScrollToTop from "./components/common/ScrollToTop";
 
 function App() {
   return (
     <>
       <AuthProvider>
+        <ScrollToTop />
         <Routes>
           <Route element={<Layout />}>
             <Route path="/" element={<Home />}></Route>
