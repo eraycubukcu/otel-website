@@ -29,9 +29,6 @@ import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext"; // Kullanıcı bilgisi için ekledim
 
 const ReservationPage = () => {
-  // 1. URL'deki parametreyi alıyoruz.
-  // Router'da :slug veya :id ne yazıyorsa useParams onu yakalar.
-  // Biz buraya gelen değerin artık bir "Slug" (isim) olduğunu biliyoruz.
   const params = useParams();
   const slug = params.slug || params.id; // Her ihtimale karşı ikisini de kontrol et
 
@@ -343,7 +340,6 @@ const ReservationPage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="firstName">Adınız</Label>
-                    {/* Otomatik doldurma eklendi */}
                     <Input id="firstName" defaultValue={user?.name || ""} placeholder="Adınız" className="h-11 border-slate-200" />
                   </div>
                   <div className="space-y-2">
@@ -359,7 +355,7 @@ const ReservationPage = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Telefon Numarası</Label>
-                    <Input id="phone" type="tel" placeholder="05XX XXX XX XX" className="h-11 border-slate-200" />
+                    <Input id="phone" type="tel" placeholder="05XX XXX XX XX" defaultValue={user?.phone || ""} className="h-11 border-slate-200" />
                   </div>
                 </div>
 

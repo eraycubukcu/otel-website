@@ -192,7 +192,7 @@ const Profile = () => {
 
               </CardContent>
               <CardFooter className="bg-slate-50/50 p-6 flex justify-end">
-                <Button type="submit" disabled={isLoading} className="bg-slate-900 h-11 px-8">
+                <Button type="submit" disabled={isLoading} className="bg-slate-900 h-9 px-8">
                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                    Değişiklikleri Kaydet
                 </Button>
@@ -244,7 +244,7 @@ const Profile = () => {
 
               </CardContent>
               <CardFooter className="bg-slate-50/50 p-6 flex justify-end">
-                <Button type="submit" variant="destructive" disabled={isLoading} className="h-11 px-8">
+                <Button type="submit" variant="destructive" disabled={isLoading} className="h-9 px-8">
                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                    Şifreyi Güncelle
                 </Button>

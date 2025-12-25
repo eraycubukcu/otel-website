@@ -25,7 +25,7 @@ const Login = () => {
   const [error, setError] = useState("");
   const [isLoading, setLoading] = useState(false);
 
-  const   handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -82,12 +82,12 @@ const Login = () => {
           <div className="grid gap-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Şifre</Label>
-              <Link
+              {/* <Link
                 to="#"
                 className="text-sm font-medium text-slate-600 hover:text-blue-600"
               >
                 Şifremi unuttum?
-              </Link>
+              </Link> */}
             </div>
             <div className="relative">
               <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />

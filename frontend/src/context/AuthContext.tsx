@@ -1,4 +1,3 @@
-import { set } from "date-fns";
 import {
   createContext,
   useContext,
@@ -13,6 +12,7 @@ type User = {
   name: string;
   surname: string;
   email: string;
+  phone: string;
   role: "admin" | "user";
 };
 

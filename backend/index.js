@@ -14,6 +14,7 @@ import { fileURLToPath } from "url";
 import uploadRoute from "./routes/upload.js";
 import path from "path";
 import sitemapRoute from "./routes/sitemapRoute.js";
+import visitorRouter from "./routes/visitorsRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -25,11 +26,15 @@ const __dirname = path.dirname(__filename);
 
 const PORT = process.env.PORT | 5000;
 
+// canlıya alındığında kullanıcının gerçek ip'sini almaya devam etmesi için kullanılır
+// app.set('trust proxy', 1); 
+
+
 app.use(cors()); // frontend bağlantı
 app.use(express.json()); // json verilerini okumak için
 app.use(cookieParser());
 
-app.use("/uploads", express.static(path.join(__dirname, "uploads")))
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use(sitemapRoute);
 app.use("/api/auth", authRoutes);
@@ -40,6 +45,7 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/dashboard", dashboardRoute);
 app.use("/api/upload", uploadRoute);
 app.use("/api/settings", settingsRouter);
+app.use("/api/visitors", visitorRouter);
 
 app.get("/", (req, res) => {
   res.send("Api çalışıyor.");

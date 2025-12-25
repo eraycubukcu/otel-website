@@ -297,12 +297,13 @@ const AdminMessages = () => {
             </Button>
             <Button 
                 variant="destructive" 
+                className="ml-3"
                 onClick={() => selectedMessage && handleDelete(selectedMessage._id)}
             >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Sil
             </Button>
-            <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => window.location.href = `mailto:${selectedMessage?.email}`}>
+            <Button className="bg-blue-600 hover:bg-blue-700 ml-3" onClick={() => window.location.href = `mailto:${selectedMessage?.email}`}>
                 Yanıtla
             </Button>
           </DialogFooter>
