@@ -92,13 +92,13 @@ const MyReservations = () => {
       {/* Başlık Alanı */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-slate-900">Rezervasyonlarım</h2>
+          <h2 className="text-3xl font-medium tracking-tight text-slate-900">Rezervasyonlarım</h2>
           <p className="text-slate-500 mt-1">Geçmiş ve yaklaşan tüm konaklama detaylarınız.</p>
         </div>
-        <div className="text-right hidden md:block">
+        {/* <div className="text-right hidden md:block">
            <p className="text-sm text-slate-400">Toplam Kayıt</p>
            <p className="text-2xl font-bold text-slate-900">{reservations.length}</p>
-        </div>
+        </div> */}
       </div>
 
       {reservations.length === 0 ? (

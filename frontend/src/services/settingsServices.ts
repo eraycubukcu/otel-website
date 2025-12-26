@@ -16,6 +16,8 @@ export interface SiteSettings {
   heroImage?: string;   // Tekil resim desteği
   heroImages?: any[];   // Çoklu slider
   features?: Feature[]; // Özellik kartları
+  about?: string,
+  aboutImage?: string,
   email?: string;
   phone?: string;
   address?: string;

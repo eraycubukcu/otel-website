@@ -21,6 +21,6 @@ router.put("/:id", verifyAdmin, updateReservation);
 
 router.get("/room/:roomId", getRoomUnavailableDates);
 
-router.delete("/:id", verifyAdmin, deleteReservation);
+router.delete("/:id", deleteReservation);
 
 export default router;
