@@ -36,7 +36,7 @@ const About = () => {
   }, []);
 
   if (loading) {
-      return <div className="flex justify-center py-20"><Loader2 className="animate-spin" /></div>;
+      return <div className="flex h-svh justify-center py-20"><Loader2 className="animate-spin" /></div>;
   }
 
   return (

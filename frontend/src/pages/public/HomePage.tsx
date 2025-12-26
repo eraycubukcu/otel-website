@@ -117,11 +117,13 @@ const Home = () => {
     <div>
       {/* --- SLIDER --- */}
       <div>
-        <Carousel className="w-full" plugins={[Autoplay({ delay: 3000 })]}>
-          <CarouselContent>
+        <Carousel className="w-full" 
+        // plugins={[Autoplay({ delay: 3000 })]}
+        >
+          <CarouselContent className="px-1">
             {slides.map((slide, index) => (
-              <CarouselItem key={index}>
-                <div className="relative h-[500px] w-full overflow-hidden">
+              <CarouselItem  key={index}>
+                <div className="border-solid border-[1px] border-gray-200 relative h-[500px] w-full overflow-hidden rounded-xl">
                   <img
                     src={getFullImageUrl(slide.imageUrl)}
                     alt={slide.title || "Slider Image"}
@@ -223,7 +225,7 @@ const Home = () => {
       </div>
 
       {/* --- HARİTA --- */}
-      <div className="w-full h-[400px] relative group bg-gray-200">
+      <div className="w-full h-[400px] relative group bg-gray-200 rounded-lg overflow-hidden px-1">
         <iframe
           key={mapKey}
           src={mapUrl}
