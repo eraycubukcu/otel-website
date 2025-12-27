@@ -46,7 +46,7 @@ const About = () => {
           <CardContent className="p-0">
             <div className="flex flex-col md:flex-row">
               <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
-                <h2 className="text-3xl font-medium text-slate-900 mb-6">
+                <h2 className="text-3xl font-medium text-slate-700 mb-6">
                   MoonRose Otel Hakkında
                 </h2>
 

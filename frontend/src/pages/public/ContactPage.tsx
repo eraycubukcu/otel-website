@@ -157,7 +157,7 @@ const Contact = () => {
                    <span className="w-1 h-6 bg-purple-600 rounded-full inline-block"></span>
                    Yakındakiler
                 </h3>
-                <div className="bg-slate-50 rounded-lg p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="rounded-lg p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex items-center gap-2 text-slate-700">
                     <Landmark className="w-4 h-4 text-purple-600 shrink-0" />
                     <span>Atakum Sahili: 50m</span>
