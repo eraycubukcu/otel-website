@@ -5,7 +5,6 @@ import { tr } from "date-fns/locale";
 import { 
   CalendarDays, 
   MapPin, 
-  Clock, 
   Loader2, 
   CreditCard, 
   BedDouble, 
@@ -13,24 +12,20 @@ import {
   CalendarArrowUp,
   XCircle
 } from "lucide-react";
-import { Link } from "react-router-dom"; // React Router kullanıyorsun
-
-// Shadcn UI Bileşenleri
-import { Card, CardContent } from "@/components/ui/card";
+import { Link } from "react-router-dom";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner"; // veya 'react-hot-toast'
+import { toast } from "sonner";
 
 const MyReservations = () => {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 1. Verileri Çekme
   const fetchReservations = async () => {
     try {
       const data = await reservationService.getUserReservation();
-      // Tarihe göre sırala (En yeni en üstte)
       const sortedData = data.sort((a, b) => 
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
@@ -47,7 +42,6 @@ const MyReservations = () => {
     fetchReservations();
   }, []);
 
-  // 2. İptal Fonksiyonu
   const handleCancel = async (id: string) => {
     if (!window.confirm("Bu rezervasyonu iptal etmek istediğinize emin misiniz?")) return;
 
@@ -60,7 +54,6 @@ const MyReservations = () => {
     }
   };
 
-  // Helper: Durum Stilleri
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "confirmed": 
@@ -89,7 +82,6 @@ const MyReservations = () => {
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto py-6 px-4">
-      {/* Başlık Alanı */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-6">
         <div>
           <h2 className="text-3xl font-medium tracking-tight text-slate-900">Rezervasyonlarım</h2>
@@ -102,7 +94,6 @@ const MyReservations = () => {
       </div>
 
       {reservations.length === 0 ? (
-        // BOŞ DURUM (Empty State)
         <div className="flex flex-col items-center justify-center py-16 bg-slate-50 rounded-2xl border border-slate-100 text-center">
           <div className="bg-white p-4 rounded-full shadow-sm mb-4">
              <CalendarDays className="h-12 w-12 text-slate-300" />
@@ -116,29 +107,24 @@ const MyReservations = () => {
           </Button>
         </div>
       ) : (
-        // DOLU LİSTE
         <div className="grid gap-6 ">
           {reservations.map((res) => (
             <Card key={res._id} className="overflow-hidden pt-0 pb-0 border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 group">
               <div className="flex flex-col md:flex-row">
                 
-                {/* SOL: Oda Görseli */}
                 <div className="w-full md:w-64 h-56 md:h-auto relative">
                    <img 
                     src={res.room?.image || "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80"} 
                     alt={res.room?.title || "Oda"} 
                     className="w-full h-full object-cover  transition-transform duration-500"
                    />
-                   {/* Mobil için Durum Rozeti (Resim üstünde) */}
                    <div className="absolute top-3 right-3 md:hidden">
                       {getStatusBadge(res.status)}
                    </div>
                 </div>
 
-                {/* SAĞ: İçerik */}
                 <div className="flex-1 p-6 flex flex-col">
                   
-                  {/* Üst Kısım: Başlık ve Durum */}
                   <div className="flex justify-between items-start mb-4">
                     <div>
                          <h3 className="text-xl font-bold text-slate-900 transition-colors">
@@ -155,7 +141,6 @@ const MyReservations = () => {
                            </div>
                          </div>
                     </div>
-                    {/* Desktop Durum Rozeti */}
                     <div className="hidden md:block">
                         {getStatusBadge(res.status)}
                     </div>
@@ -163,7 +148,6 @@ const MyReservations = () => {
 
                   <Separator className="mb-4" />
                     
-                  {/* Orta Kısım: Tarih Kutucukları */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                       <div className="bg-slate-50 p-3 rounded-lg flex items-center gap-3 border border-slate-100">
                           <div className="bg-white p-2 rounded-md shadow-sm text-blue-600">
@@ -186,7 +170,6 @@ const MyReservations = () => {
                       </div>
                   </div>
 
-                  {/* Alt Kısım: Fiyat ve Aksiyon */}
                   <div className="mt-auto flex items-center justify-between pt-2">
                      <div className="flex flex-col">
                         <span className="text-xs text-slate-400 font-medium">TOPLAM TUTAR</span>

@@ -4,7 +4,6 @@ import { format, differenceInCalendarDays, eachDayOfInterval, startOfDay } from 
 import { tr } from "date-fns/locale";
 import { Calendar as CalendarIcon, ChevronLeft, Loader2, Info } from "lucide-react";
 
-// Shadcn Bileşenleri
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -26,24 +25,21 @@ import { cn } from "@/lib/utils";
 import { reservationService } from "@/services/reservationService";
 import { roomService, type Room } from "@/services/roomService";
 import { toast } from "sonner";
-import { useAuth } from "@/context/AuthContext"; // Kullanıcı bilgisi için ekledim
+import { useAuth } from "@/context/AuthContext";
 
 const ReservationPage = () => {
   const params = useParams();
-  const slug = params.slug || params.id; // Her ihtimale karşı ikisini de kontrol et
+  const slug = params.slug || params.id;
 
   const navigate = useNavigate();
-  const { user } = useAuth(); // Kullanıcı bilgilerini otomatik doldurmak için
+  const { user } = useAuth();
 
-  // State'ler
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   
-  // DOLU GÜNLER STATE'İ
   const [disabledDates, setDisabledDates] = useState<Date[]>([]);
 
-  // Tarih State'i
   const [date, setDate] = useState<{
     from: Date | undefined;
     to: Date | undefined;
@@ -54,21 +50,17 @@ const ReservationPage = () => {
 
   const [guestNote, setGuestNote] = useState("");
   const [totalPrice, setTotalPrice] = useState(0);
-  const [nights, setNights] = useState(0); // Başlangıçta 0
+  const [nights, setNights] = useState(0);
 
-  // 1. Verileri (Oda ve Takvim) Çek - MANTIK BURADA DÜZELTİLDİ
   useEffect(() => {
     const fetchData = async () => {
       if (!slug) return;
       setLoading(true);
 
       try {
-        // A) Önce Slug (İsim) ile Odayı Bul
-        // roomService dosyanıza 'getRoomBySlug' eklediğinizden emin olun!
         const roomData = await roomService.getRoomBySlug(slug);
         setSelectedRoom(roomData as unknown as Room);
 
-        // B) Oda Bulunduysa, onun ID'sini kullanarak Takvimi (Dolu Günleri) Çek
         if (roomData && roomData._id) {
             try {
               const busyRanges = await reservationService.getUnavailableDates(roomData._id);
@@ -94,7 +86,7 @@ const ReservationPage = () => {
       } catch (error) {
         console.error("Oda yüklenirken hata:", error);
         toast.error("Oda bilgileri alınamadı veya bulunamadı.");
-        navigate("/rooms"); // Hata varsa listeye dön
+        navigate("/rooms");
       } finally {
         setLoading(false);
       }
@@ -103,11 +95,9 @@ const ReservationPage = () => {
     fetchData();
   }, [slug, navigate]);
 
-  // Fiyat Hesaplama
   useEffect(() => {
     if (selectedRoom && date.from && date.to) {
       const dayCount = differenceInCalendarDays(date.to, date.from);
-      // Giriş ve çıkış aynı gün olamaz, en az 1 gece
       if (dayCount > 0) {
          setNights(dayCount);
          setTotalPrice(dayCount * selectedRoom.price);
@@ -128,7 +118,7 @@ const ReservationPage = () => {
       setSubmitting(true);
 
       await reservationService.createReservation({
-        room: selectedRoom._id, // Backend ID bekler, onu gönderiyoruz
+        room: selectedRoom._id,
         checkInDate: date.from,
         checkOutDate: date.to,
         totalPrice: totalPrice,
@@ -146,7 +136,6 @@ const ReservationPage = () => {
     }
   };
 
-  // Helper: Resim URL düzeltici (Senin kodunda yoktu ama garanti olsun diye ekledim, tasarım bozmaz)
   const getFullImageUrl = (url: string) => {
     if (!url) return "";
     if (url.startsWith("http") || url.startsWith("blob")) return url;
@@ -179,7 +168,6 @@ const ReservationPage = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* SOL TARAF - ODA KARTI */}
           <div className="lg:col-span-1">
             <Card className="border-none shadow-lg sticky top-8 overflow-hidden pt-0">
               <div className="h-48 w-full overflow-hidden relative">

@@ -37,11 +37,8 @@ const Rooms = () => {
     fetchRooms();
   }, []);
 
-  // --- GÜNCELLENEN KISIM ---
-  // Artık ID değil Slug alıyoruz
   const handleBookingClick = (roomSlug: string) => {
     if (user) {
-      // URL artık /reservation/king-suite gibi olacak
       navigate(`/reservation/${roomSlug}`);
     } else {
       navigate("/auth/login", {
@@ -49,7 +46,6 @@ const Rooms = () => {
       });
     }
   };
-  // -------------------------
 
   const filteredRooms =
     activeCategory === "hepsi"
@@ -69,7 +65,6 @@ const Rooms = () => {
     <div className="w-full bg-white min-h-screen py-8 md:py-10">
       <div className="container mx-auto px-6 md:px-10">
         
-        {/* --- Header Section --- */}
         <div className="flex flex-col items-center text-center mb-14 space-y-3">
           <Badge variant="outline" className="px-3 py-1 border-slate-200 text-slate-500 uppercase tracking-widest text-xs font-bold rounded-full">
             Konaklama
@@ -82,7 +77,6 @@ const Rooms = () => {
           </p>
         </div>
 
-        {/* --- Category Filter --- */}
         <div className="flex flex-wrap justify-center gap-2 mb-14">
           <div className="inline-flex p-1 bg-slate-100/80 rounded-full">
             {categories.map((cat) => (
@@ -102,14 +96,12 @@ const Rooms = () => {
           </div>
         </div>
 
-        {/* --- Rooms Grid --- */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredRooms.map((room) => (
             <div
               key={room._id}
               className="group flex flex-col bg-white rounded-2xl overflow-hidden border border-slate-100 hover:border-slate-200 hover:shadow-xl transition-all duration-500 ease-out"
             >
-              {/* Image Container */}
               <div className="relative aspect-[3/2] overflow-hidden bg-slate-100">
                 <img
                   src={room.image}
@@ -118,7 +110,6 @@ const Rooms = () => {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60" />
                 
-                {/* Price Tag */}
                 <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-md shadow-sm">
                    <div className="flex flex-col items-end leading-none">
                       <span className="text-base font-bold text-slate-900">{room.price} ₺</span>
@@ -126,13 +117,11 @@ const Rooms = () => {
                    </div>
                 </div>
 
-                {/* Category Badge */}
                 <span className="absolute top-4 left-4 bg-black/30 backdrop-blur-sm text-white px-2.5 py-1 rounded text-xs font-medium border border-white/20">
                   {categories.find((c) => c.id === room.category)?.label}
                 </span>
               </div>
 
-              {/* Content */}
               <div className="flex flex-col flex-grow p-6">
                 <div className="mb-4">
                   <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-blue-900 transition-colors line-clamp-1">
@@ -143,7 +132,6 @@ const Rooms = () => {
                   </p>
                 </div>
 
-                {/* Features */}
                 <div className="flex items-center gap-5 mb-6 text-slate-400">
                    <div className="flex items-center gap-2" title="Kapasite">
                       <Users className="w-4 h-4" />
@@ -159,15 +147,11 @@ const Rooms = () => {
                    </div>
                 </div>
 
-                {/* Action Button */}
                 <div className="mt-auto">
                   <Button
                     variant="outline"
                     className="w-full h-11 text-sm rounded-xl border-slate-200 text-slate-900 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all duration-300 group/btn"
-                    // --- GÜNCELLENEN KISIM ---
-                    // Burada room._id yerine room.slug gönderiyoruz
                     onClick={() => handleBookingClick(room.slug)}
-                    // -------------------------
                   >
                     <span>Detaylar ve Rezervasyon</span>
                     <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
@@ -178,7 +162,6 @@ const Rooms = () => {
           ))}
         </div>
 
-        {/* Empty State */}
         {filteredRooms.length === 0 && (
           <div className="text-center py-20">
              <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-slate-50 mb-4">

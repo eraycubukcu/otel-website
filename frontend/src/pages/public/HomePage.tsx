@@ -24,22 +24,21 @@ const Home = () => {
   const [features, setFeatures] = useState<Feature[]>([]);
 
   // Varsayılan Slider
-  const defaultSlides: SlideData[] = [
-    {
-      imageUrl: "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&w=1920&q=80",
-      title: "Lüks Konaklama",
-    },
-    {
-      imageUrl: "https://images.unsplash.com/photo-1582719508461-905c673771fd?ixlib=rb-4.0.3&w=1920&q=80",
-      title: "Eşsiz Manzara",
-    },
-    {
-      imageUrl: "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&w=1920&q=80",
-      title: "Konforlu Odalar",
-    },
-  ];
+  // const defaultSlides: SlideData[] = [
+  //   {
+  //     imageUrl: "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&w=1920&q=80",
+  //     title: "Lüks Konaklama",
+  //   },
+  //   {
+  //     imageUrl: "https://images.unsplash.com/photo-1582719508461-905c673771fd?ixlib=rb-4.0.3&w=1920&q=80",
+  //     title: "Eşsiz Manzara",
+  //   },
+  //   {
+  //     imageUrl: "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&w=1920&q=80",
+  //     title: "Konforlu Odalar",
+  //   },
+  // ];
 
-  // Sabit Belgeler
   const documents = [
     {
       id: 1,
@@ -95,9 +94,9 @@ const Home = () => {
              setFeatures(data.features);
           }
         }
-        setSlides(fetchedSlides.length > 0 ? fetchedSlides : defaultSlides);
+        setSlides(fetchedSlides.length > 0 ? fetchedSlides : []);
       } catch (error) {
-        setSlides(defaultSlides);
+        setSlides([]);
       } finally {
         setLoading(false);
       }
@@ -115,7 +114,6 @@ const Home = () => {
 
   return (
     <div>
-      {/* --- SLIDER --- */}
       <div>
         <Carousel className="w-full" plugins={[Autoplay({ delay: 3000 })]}>
           <CarouselContent className="px-1">
@@ -137,7 +135,6 @@ const Home = () => {
         </Carousel>
       </div>
 
-      {/* --- ÖZELLİKLER (FEATURES) --- */}
       {features.length > 0 && (
         <div className="w-full bg-slate-50 py-10">
           <div className="container max-w-5xl mx-auto px-4 flex flex-col gap-8">
@@ -147,26 +144,18 @@ const Home = () => {
               return (
                 <Card
                   key={feature._id || index}
-                  // BURASI DEĞİŞTİ: 
-                  // 1. h-auto md:h-64 -> Mobilde otomatik, Masaüstünde SABİT yükseklik (256px)
-                  // 2. w-full -> Genişliği konteyner kadar
                   className="overflow-hidden border-none shadow-md hover:shadow-lg transition-shadow py-0 h-auto md:h-64"
                 >
                   <CardContent className="p-0 h-full">
                     <div
                       className={`flex flex-col ${
                         isReverse ? "md:flex-row-reverse" : "md:flex-row"
-                      } h-full w-full`} // w-full önemli
+                      } h-full w-full`}
                     >
-                      {/* RESİM ALANI */}
-                      {/* md:w-1/2 -> Genişlik kesinlikle %50 */}
-                      {/* h-48 md:h-full -> Mobilde 48 birim, masaüstünde kartın tamamı */}
-                      {/* relative ve shrink-0 -> Resim alanı asla sıkışmaz veya genişlemez */}
                       <div className="w-full md:w-1/2 h-48 md:h-full relative bg-slate-100 shrink-0">
                         <img
                           src={getFullImageUrl(feature.image)}
                           alt={feature.title}
-                          // absolute inset-0 -> Resim kutuya hapsolur, kutuyu büyütmez
                           className="absolute inset-0 w-full h-full object-cover"
                           onError={(e) => {
                             e.currentTarget.src = "https://via.placeholder.com/800x600?text=Resim+Yok";
@@ -174,15 +163,12 @@ const Home = () => {
                         />
                       </div>
 
-                      {/* METİN ALANI */}
-                      {/* overflow-hidden -> Metin çok uzunsa taşmayı engeller */}
                       <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col justify-center bg-white h-full overflow-hidden">
                         {feature.title && (
                           <h4 className="text-xl md:text-2xl font-medium mb-3 text-slate-800 truncate">
                             {feature.title}
                           </h4>
                         )}
-                        {/* line-clamp-4 -> 4 satırdan fazla metin varsa ... koyar, kutuyu bozmaz */}
                         <div className="text-slate-600 leading-relaxed text-sm md:text-base line-clamp-4 md:line-clamp-5">
                           {feature.description}
                         </div>
@@ -196,7 +182,6 @@ const Home = () => {
         </div>
       )}
 
-      {/* --- BELGELER --- */}
       <div className="w-full py-10 bg-white">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -222,7 +207,6 @@ const Home = () => {
         </div>
       </div>
 
-      {/* --- HARİTA --- */}
       <div className="w-full h-[400px] relative group bg-gray-200 rounded-lg overflow-hidden px-1">
         <iframe
           key={mapKey}

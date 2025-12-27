@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 
 const About = () => {
   const [aboutText, setAboutText] = useState("");
-  const [aboutImage, setAboutImage] = useState(""); // State
+  const [aboutImage, setAboutImage] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
