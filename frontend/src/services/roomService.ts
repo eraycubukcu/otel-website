@@ -37,7 +37,7 @@ export const roomService = {
   },
   
   // Güncelleme fonksiyonu (AdminRooms'da kullanılıyor olabilir)
-  updateRoom: async (id: string, roomData: Partial<Room>) => {
+    updateRoom: async (id: string, roomData: Partial<Room>) => {
     // Backend'de update rotası henüz yoksa hata verebilir, şimdilik dursun
     // const response = await api.put(`/rooms/${id}`, roomData);
     // return response.data;

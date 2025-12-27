@@ -117,9 +117,7 @@ const Home = () => {
     <div>
       {/* --- SLIDER --- */}
       <div>
-        <Carousel className="w-full" 
-        // plugins={[Autoplay({ delay: 3000 })]}
-        >
+        <Carousel className="w-full" plugins={[Autoplay({ delay: 3000 })]}>
           <CarouselContent className="px-1">
             {slides.map((slide, index) => (
               <CarouselItem  key={index}>

@@ -263,12 +263,12 @@ const AdminSettings = () => {
                     )}
                   </div>
                   <div className="space-y-2 flex-1">
-                    <Input
+                    {/* <Input
                       value={settingsForm.logo}
                       onChange={handleChange}
                       id="logo"
                       placeholder="URL veya dosya yükleyin"
-                    />
+                    /> */}
                     <div className="flex items-center gap-2">
                       <Input
                         type="file"
