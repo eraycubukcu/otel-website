@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Lock, Mail, AlertCircle } from "lucide-react";
+import { Lock, Mail, AlertCircle, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 
@@ -53,8 +53,17 @@ const Login = () => {
   return (
     <Card className="border-none shadow-xl w-full max-w-md">
       <CardHeader className="space-y-1 text-center">
-        
-        <CardTitle className="text-2xl font-light">Giriş Yap</CardTitle>
+        <CardTitle className="text-2xl font-light mr-5">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-slate-500 hover:text-slate-900"
+            onClick={() => navigate("/")}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          Giriş Yap
+        </CardTitle>
         <CardDescription>
           Devam etmek için hesabınıza giriş yapın
         </CardDescription>
@@ -62,7 +71,6 @@ const Login = () => {
 
       <form onSubmit={handleLogin}>
         <CardContent className="grid gap-4">
-
           <div className="grid gap-2">
             <Label htmlFor="email">E-posta</Label>
             <div className="relative">

@@ -12,7 +12,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
-import {toast} from "sonner"
+import { toast } from "sonner";
+import { ArrowLeft } from "lucide-react";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -59,7 +60,17 @@ const Register = () => {
   return (
     <Card className="border-none shadow-xl w-full max-w-md">
       <CardHeader className="space-y-1 text-center">
-        <CardTitle className="text-2xl font-light">Hesap Oluştur</CardTitle>
+        <CardTitle className="text-2xl font-light mr-5">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-slate-500 hover:text-slate-900"
+            onClick={() => navigate("/")}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          Hesap Oluştur
+        </CardTitle>
         <CardDescription>
           Rezervasyonu yapmak için hemen üye olun.
         </CardDescription>
